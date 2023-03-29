@@ -4,6 +4,8 @@ import sys
 import pygame
 from pygame.locals import *
 
+# Source code for game taken from: https://github.com/sourabhv/FlapPyBird
+
 FPS = 30
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
