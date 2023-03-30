@@ -7,7 +7,13 @@ from pygame.locals import *
 import globfile
 
 class Pipes:
-    def __init__(self, pipe1, pipe2, sprites, velocity, hitmasks):
+    def __init__(self, sprites, velocity, seed):
+        self.seed = random.Random(seed)
+        self.sprites = sprites
+        self.velocity = velocity
+         
+        pipe1 = self.getRandomPipe()
+        pipe2 = self.getRandomPipe()
         self.upperPipes = [
             {'x': globfile.SCREENWIDTH + 200, 'y': pipe1[0]['y']},
             {'x': globfile.SCREENWIDTH + 200 + (globfile.SCREENWIDTH / 2), 'y': pipe2[0]['y']},
@@ -17,10 +23,8 @@ class Pipes:
             {'x': globfile.SCREENWIDTH + 200, 'y': pipe1[1]['y']},
             {'x': globfile.SCREENWIDTH + 200 + (globfile.SCREENWIDTH / 2), 'y': pipe2[1]['y']},
         ]
-        self.sprites = sprites
-        self.velocity = velocity
-        self.hitmasks = hitmasks
-        
+
+
     def collide(self, player):
         pipeW = self.sprites[0].get_width()
         pipeH = self.sprites[0].get_height()
@@ -29,40 +33,15 @@ class Pipes:
             # upper and lower pipe rects
             uPipeRect = pygame.Rect(uPipe['x'], uPipe['y'], pipeW, pipeH)
             lPipeRect = pygame.Rect(lPipe['x'], lPipe['y'], pipeW, pipeH)
-
-            # player and upper/lower pipe hitmasks
-            pHitMask = player.hitmasks
-            uHitmask = self.hitmasks[0]
-            lHitmask = self.hitmasks[1]
-
-            # if bird collided with upipe or lpipe
-            uCollide = self.pixelCollision(player.rect, uPipeRect, pHitMask, uHitmask)
-            lCollide = self.pixelCollision(player.rect, lPipeRect, pHitMask, lHitmask)
-
-            if uCollide or lCollide:
-                return [True, False]
+            
+            if uPipeRect.colliderect(player.rect) or lPipeRect.colliderect(player.rect):
+                return [True, True]
 
         return [False, False]
-
-    def pixelCollision(self, rect1, rect2, hitmask1, hitmask2):
-        """Checks if two objects collide and not just their rects"""
-        rect = rect1.clip(rect2)
-    
-        if rect.width == 0 or rect.height == 0:
-            return False
-    
-        x1, y1 = rect.x - rect1.x, rect.y - rect1.y
-        x2, y2 = rect.x - rect2.x, rect.y - rect2.y
-    
-        for x in range(rect.width):
-            for y in range(rect.height):
-                if hitmask1[x1+x][y1+y] and hitmask2[x2+x][y2+y]:
-                    return True
-        return False
     
     def passed(self, player):
         for pipe in self.upperPipes:
-            if pipe['x'] < player.x:
+            if pipe['x'] <= player.x < pipe['x'] + 5:
                 return True
         return False
     
@@ -86,7 +65,8 @@ class Pipes:
     def getRandomPipe(self):
         """returns a randomly generated pipe"""
         # y of gap between upper and lower pipe
-        gapY = random.randrange(0, int(globfile.BASEY * 0.6 - globfile.PIPEGAPSIZE))
+        gapY = self.seed.randrange(0, int(globfile.BASEY * 0.6 - globfile.PIPEGAPSIZE))
+        print(gapY)
         gapY += int(globfile.BASEY * 0.2)
         pipeHeight = self.sprites[0].get_height()
         pipeX = globfile.SCREENWIDTH + 10
