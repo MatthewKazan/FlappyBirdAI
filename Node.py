@@ -15,7 +15,7 @@ class Node:
         self.out_connections: list[Connection] = []
         self.layer: int = layer
 
-    def activate(self):
+    def feed_forward(self):
         if self.layer != 0:
             self.output = sigmoid(self.input_sum)
         for connection in self.out_connections:

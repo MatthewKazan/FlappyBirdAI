@@ -8,6 +8,7 @@ from Genome import Genome
 from HumanAgent import HumanAgent
 from Pipes import Pipes
 
+global INNOVATION_NUMBER
 
 class Population:
     def __init__(self, size, dt):

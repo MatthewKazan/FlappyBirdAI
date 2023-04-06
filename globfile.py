@@ -39,3 +39,5 @@ PIPES_LIST = (
     'assets/sprites/pipe-green.png',
     'assets/sprites/pipe-red.png',
 )
+
+next_connection_number = 0

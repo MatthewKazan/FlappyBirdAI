@@ -50,7 +50,7 @@ class Player:
             self.isAlive = False
 
     def update(self):
-        decision = self.agent.next_move(self.getState())
+        decision = self.agent.next_move(self.getState())[0]
         if decision > .5:
             self.flap()
         # rotate the player
@@ -73,9 +73,9 @@ class Player:
         dists = [0] * 4
         closest_pipe = 0
         dists[0] = numpy.interp(self.playerVelY, [-10, 10], [-1, 1])
-        if self.x < self.pipes.lowerPipes[1]['x'] and (
-            self.pipes.lowerPipes[0]['x'] < self.x or self.pipes.lowerPipes[0][
-            'x'] > self.pipes.lowerPipes[1]['x']):
+        if self.x < self.pipes.lowerPipes[1]['x'] and \
+                (self.pipes.lowerPipes[0]['x'] < self.x or
+                 self.pipes.lowerPipes[0]['x'] > self.pipes.lowerPipes[1]['x']):
             closest_pipe = 1
         dists[1] = numpy.interp(
             self.pipes.lowerPipes[closest_pipe]['x'] - self.x,
@@ -86,6 +86,7 @@ class Player:
         dists[3] = numpy.interp(max(0, self.y - (
                 self.pipes.upperPipes[closest_pipe]['y'] + self.pipes.height)),
                                 [0, globfile.SCREENHEIGHT], [0, 1])
+        return dists
 
     def dropDead(self):
         # player y shift
