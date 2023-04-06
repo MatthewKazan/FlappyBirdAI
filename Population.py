@@ -14,7 +14,7 @@ class Population:
     def __init__(self, size, dt):
         self.players = []
         self.innovationHistory = []
-        self.pipes = Pipes(-128  * dt, 32)
+        self.pipes = Pipes(-128 * dt, 32)
         n_inputs = 4
         n_outputs = 1
         layers = 2

@@ -35,6 +35,14 @@ class Genome:
         # add the bias node
         self.bias_node_id = len(self.nodes)
         self.nodes.append(Node(id=self.bias_node_id, layer=0))
+    
+    def __str__(self):
+        ret = "Inputs:  " + str(self.num_inputs) + "\n"
+        ret += "Outputs: " + str(self.num_outputs)
+        ret += "Nodes: " + str([str(x.id) + "\n" for x in self.hidden_nodes])
+        ret += "Connections: " + str([str(x.in_node) + " -> " + str(x.out_node) for x in self.connections])
+        return ret
+        
         
     def connect_nodes(self):
         # remove all connections so when reconnecting after mutation there are no errors

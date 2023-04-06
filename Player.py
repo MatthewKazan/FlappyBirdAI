@@ -68,6 +68,7 @@ class Player:
 
         playerHeight = self.sprites[0].get_height()
         self.y += min(self.playerVelY, globfile.BASEY - self.y - playerHeight)
+        print(self.agent)
 
     def getState(self):
         dists = [0] * 4
