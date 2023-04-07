@@ -35,6 +35,8 @@ class Player:
                                 self.sprites[0].get_height())
         self.pipes = pipes
         self.isAlive = True
+        self.fitness = 0 # the fitness score used to breed and annihilate the poorly performing children
+        self.lifespan = 0
 
     def flap(self):
         """Flap the player"""
@@ -100,6 +102,13 @@ class Player:
         # player velocity change
         if self.playerVelY < 15:
             self.playerVelY += self.playerAccY
+            
+    def fitness_level(self):
+        return 1 + self.score ** 2 + self.lifespan / 20
+        
+            
+    def __copy__(self):
+        pass
 
     def draw(self, screen):
         if self.isAlive:

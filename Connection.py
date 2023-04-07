@@ -1,6 +1,5 @@
 import random
 
-
 class Connection:
     def __init__(self, in_node: 'Node', out_node: 'Node', weight: float, innovation_num: int):
         self.in_node = in_node
@@ -14,7 +13,7 @@ class Connection:
         if rand > perturb_chance:
             self.weight = random.uniform(-1, 1)
         else:
-            self.weight += random.uniform(-0.1, 0.1)
+            self.weight += random.uniform(-0.2, 0.2)
             # keep the weights bounded to not overpower another connection
             if self.weight > 1:
                 self.weight = 1

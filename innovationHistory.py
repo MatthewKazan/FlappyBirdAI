@@ -10,9 +10,9 @@ class ConnectionHistory:
 	def matches_genome(self, genome, in_node, out_node):
 		if self.in_node_id == in_node.id and self.out_node_id == out_node.id:
 			# check if the innovation number is in the genome's innovation history
-			for connectionGene in genome.connections:
-				if connectionGene.innovation_num not in self.innovation_nums:
-					return False
+			# for connectionGene in genome.connections:
+			# 	if connectionGene.innovation_num not in self.innovation_nums:
+			# 		return False
 			# if we reach this point the genomes are identical and the connection is between the same nodes
 			return True
 		return False

@@ -7,7 +7,7 @@ from innovationHistory import ConnectionHistory
 import globfile as glob
 
 class Genome:
-    def __init__(self, num_inputs: int, num_outputs: int, layers=2):
+    def __init__(self, num_inputs: int, num_outputs: int, crossover=False, layers=2):
         self.num_inputs: int = num_inputs
         self.num_outputs: int = num_outputs
         self.layers: int = layers
@@ -17,6 +17,9 @@ class Genome:
         self.output_nodes: list[Node] = []
         self.hidden_nodes: list[Node] = []
         # self.next_node_id = 0 # id of the next node to add that is not an input or output node
+        
+        if crossover:
+            return 
 
         # add input nodes equivalent to the number of input features
         for i in range(num_inputs):
@@ -74,14 +77,24 @@ class Genome:
     def add_connection(self, innovation_history):
         # make sure the input node is not an output node and the output node is not an input node
         # filter out output nodes  and nodes already connected to everything as the new input connection
-        non_output_nodes = [node for node in self.nodes if node.layer != self.layers - 1
-                            and len(node.out_connections) != len(self.nodes) - self.num_inputs - 1]     # subtract one for the bias node
-        input_node = random.choice(non_output_nodes)
-        # filter out input nodes and previously chosen layer and nodes already connected to as the new output connection
-        non_input_nodes = [node for node in self.nodes if node.layer != 0
-                           and node.id != input_node.layer
-                           and node not in input_node.out_connections.out_node]
-        output_node = random.choice(non_input_nodes)
+        if self.is_fully_connected():
+            Exception("Genome is fully connected")
+            
+        # from_node_choices = [node for node in self.nodes if node.layer != self.layers - 1 # TODO: This might be wrong
+        #                     and len(node.out_connections) < len(list(filter(lambda n: n.layer > node.layer, self.nodes)))]
+        # from_node: Node = random.choice(from_node_choices)
+        # # filter out input nodes and previously chosen layer and nodes already connected to as the new output connection
+        # to_node_choices = [node for node in self.nodes if node.layer != 0
+        #                        and node.id != from_node.layer
+        #                        and not from_node.is_connected_to(node)]
+        # 
+        # to_node = random.choice(to_node_choices)
+        
+        from_node: Node = random.choice(self.nodes)
+        to_node: Node = random.choice(self.nodes)
+        while from_node.layer == to_node.layer or from_node.is_connected_to(to_node):
+            from_node = random.choice(self.nodes)
+            to_node = random.choice(self.nodes)
         
         # swap the input and output nodes if the input node is on a higher layer than the output node
         if from_node.layer > to_node.layer:
@@ -99,7 +112,7 @@ class Genome:
         # add the connection to the nodes
         from_node.out_connections.append(new_connection)
         
-    def get_innovation_num(self, innovation_history: list, in_node: Node, out_node: Node):
+    def get_innovation_num(self, innovation_history: list[ConnectionHistory], in_node: Node, out_node: Node):
         for innovation in innovation_history:
             if innovation.matches_genome(self, in_node, out_node):
                 Exception('Innovation number already exists')
@@ -117,7 +130,6 @@ class Genome:
         return connection_innovation_number
     
     def add_node(self, innovation_history):
-        # TODO: NOT WORKING YET
         if len(self.connections) == 0:
             self.add_connection(innovation_history)
             return
@@ -190,8 +202,89 @@ class Genome:
         if rand < new_node_chance:
             self.add_node(innovation_history)
             
-    def crossover(self, parent2: 'Genome', innovation_history: list):
-        child = Genome(self.num_inputs, self.num_outputs, layers=self.layers)
-        child.bias_node_id = self.bias_node_id
+    def crossover(self, other_parent: 'Genome', innovation_history: list, disable_gene_chance=0.75):
+        child = Genome(self.num_inputs, self.num_outputs, crossover=True, layers=self.layers)
+        child.bias_node_id = self.bias_node_id # TODO: Might need to store and pass copy of actual bias node
         
+        child_connection_genes: list[Connection] = []
+        is_enabled: list[bool] = []
+        
+        for connection in self.connections:
+            is_child_connection_enabled = True
+            other_parent_connection = self.matching_connection(other_parent, connection.innovation_num)
+            
+            # if the two parents have a matching connection gene
+            if not other_parent_connection is None: 
+                if not connection.enabled or not other_parent_connection.enabled:
+                    if random.uniform(0, 1) < disable_gene_chance:
+                        is_child_connection_enabled = False
+                
+                # randomly choose which parent to take the gene from
+                if random.uniform(0, 1) < 0.5:
+                    child_connection_genes.append(connection)
+                else:
+                    child_connection_genes.append(other_parent_connection)
+            
+            # deal with disjoint or excess connection genes
+            else:
+                child_connection_genes.append(connection)
+                is_child_connection_enabled = connection.enabled
+            is_enabled.append(is_child_connection_enabled)
+        
+        # all excess and disjoint nodes are inherited from the more fit parent (this Genome) so the structure is the
+        # same as this parents structure a.k.a. we can copy over all the nodes
+        for node in self.nodes:
+            child.nodes.append(node.__copy__())
+            
+        for node in self.input_nodes:
+            child.input_nodes.append(node.__copy__())
+        
+        for node in self.output_nodes:
+            child.output_nodes.append(node.__copy__())
+        
+        # copy all the connections
+        for child_connection, is_child_enabled in zip(child_connection_genes, is_enabled):
+            child_in_node = child.get_node(child_connection.in_node.id)
+            child_out_node = child.get_node(child_connection.out_node.id)
+            child.connections.append(child_connection.__copy__(child_in_node, child_out_node))
+            child_connection.enabled = is_child_enabled
+        
+        child.connect_nodes()
+        return child
+    
+    def __copy__(self):
+        copy = Genome(self.num_inputs, self.num_outputs, True, layers=self.layers)
+        
+        for node in self.nodes:
+            copy.nodes.append(node.__copy__())
+
+        for node in self.input_nodes:
+            copy.input_nodes.append(node.__copy__())
+
+        for node in self.output_nodes:
+            copy.output_nodes.append(node.__copy__())
+            
+        for connection in self.connections:
+            copy.connections.append(connection.__copy__(copy.get_node(connection.in_node.id),
+                                                        copy.get_node(connection.out_node.id)))
+            
+        copy.bias_node_id = self.bias_node_id
+        copy.connect_nodes()
+
+        return copy
+        
+    def get_node(self, node_id: int):
+        for node in self.nodes:
+            if node.id == node_id:
+                return node
+        
+        Exception("No nodes found with node id:", node_id)
+        return None
+        
+    def matching_connection(self, other_parent: 'Genome', innovation_num: int):
+        for other_parent_connection in other_parent.connections:
+            if other_parent_connection.innovation_num == innovation_num:
+                return other_parent_connection
+            
+        return None
         

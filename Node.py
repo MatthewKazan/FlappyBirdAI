@@ -24,7 +24,7 @@ class Node:
                 
     def is_connected_to(self, node):
         for connection in self.out_connections:
-            if connection.outNode == node:
+            if connection.out_node == node:
                 return True
         for connection in node.out_connections:
             if connection.out_node == self:
