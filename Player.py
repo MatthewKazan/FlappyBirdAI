@@ -3,13 +3,14 @@ import sys
 import numpy
 import pygame
 import globfile
+from HumanAgent import HumanAgent
 
 
 class Player:
     """Player class"""
 
-    def __init__(self, x, y, agent, pipes):
-        self.score = 0
+    def __init__(self, pipes, x=int(globfile.SCREENWIDTH * 0.2), y=globfile.SCREENHEIGHT / 2, agent=HumanAgent()):
+        self.score = 0 # number of pipes the flappy bird has crossed
         self.x = x
         self.y = y
         self.playerVelY = -9  # player's velocity along Y, default same as playerFlapped
@@ -44,12 +45,13 @@ class Player:
         self.rect = pygame.Rect(self.x, self.y, self.sprites[0].get_width(),
                                 self.sprites[0].get_height())
 
-        if self.y + self.height >= globfile.BASEY - 1:
+        if self.y + self.height >= globfile.BASEY - 1 or self.y < 0:
             self.isAlive = False
         elif self.pipes.collide(self)[0] or self.pipes.collide(self)[1]:
             self.isAlive = False
 
     def update(self):
+        self.lifespan += 1
         decision = self.agent.next_move(self.getState())[0]
         if decision > .5:
             self.flap()
@@ -68,7 +70,7 @@ class Player:
 
         playerHeight = self.sprites[0].get_height()
         self.y += min(self.playerVelY, globfile.BASEY - self.y - playerHeight)
-        print(self.agent)
+        #print(self.agent)
 
     def getState(self):
         dists = [0] * 4
@@ -100,10 +102,12 @@ class Player:
             self.playerVelY += self.playerAccY
 
     def draw(self, screen):
-        # Player rotation has a threshold
-        visibleRot = self.playerRotThr
-        if self.playerRot <= self.playerRotThr:
-            visibleRot = self.playerRot
+        if self.isAlive:
+            # Player rotation has a threshold
+            visibleRot = self.playerRotThr
+            if self.playerRot <= self.playerRotThr:
+                visibleRot = self.playerRot
+    
+            playerSurface = pygame.transform.rotate(self.sprites[0], visibleRot)
+            screen.blit(playerSurface, (self.x, self.y))
 
-        playerSurface = pygame.transform.rotate(self.sprites[0], visibleRot)
-        screen.blit(playerSurface, (self.x, self.y))

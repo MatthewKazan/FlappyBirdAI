@@ -20,3 +20,9 @@ class Connection:
                 self.weight = 1
             elif self.weight < -1:
                 self.weight = -1
+                
+    def __copy__(self, in_node, out_node):
+        copy = Connection(in_node, out_node, weight=self.weight, innovation_num=self.innovation_num)
+        copy.enabled = self.enabled
+        
+        return copy

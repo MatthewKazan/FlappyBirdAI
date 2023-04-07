@@ -12,11 +12,6 @@ from Population import Population
 
 # Source code for game taken from: https://github.com/sourabhv/FlapPyBird
 
-FPS = 30
-SCREENWIDTH  = 288
-SCREENHEIGHT = 512
-PIPEGAPSIZE  = 100 # gap between upper and lower part of pipe
-BASEY        = SCREENHEIGHT * 0.79
 # image,and sound dicts
 IMAGES, SOUNDS = {}, {}
 
@@ -30,7 +25,7 @@ def main():
     global SCREEN, FPSCLOCK
     pygame.init()
     FPSCLOCK = pygame.time.Clock()
-    SCREEN = pygame.display.set_mode((SCREENWIDTH, SCREENHEIGHT))
+    SCREEN = pygame.display.set_mode((globfile.SCREENWIDTH, globfile.SCREENHEIGHT))
     pygame.display.set_caption('Flappy Bird')
 
     # numbers sprites for score display
@@ -53,30 +48,31 @@ def main():
     IMAGES['message'] = pygame.image.load('assets/sprites/message.png').convert_alpha()
     # base (ground) sprite
     IMAGES['base'] = pygame.image.load('assets/sprites/base.png').convert_alpha()
-
+    population = Population(20)
     while True:
         # select random background sprites
         randBg = random.randint(0, len(BACKGROUNDS_LIST) - 1)
         IMAGES['background'] = pygame.image.load(BACKGROUNDS_LIST[randBg]).convert()
 
-        FPSCLOCK.tick(FPS)
-        crashInfo = mainGame()
-        showGameOverScreen(crashInfo)
+        FPSCLOCK.tick(globfile.FPS)
+        crashInfo = mainGame(population)
+        population.birth_new_generation()
+        #showGameOverScreen(crashInfo)
 
 
-def mainGame():
+def mainGame(population):
     basex = -28
     baseShift = IMAGES['base'].get_width() - IMAGES['background'].get_width()
-    ha = HumanAgent()
-    dt = FPSCLOCK.tick(FPS)/1000
+    #ha = HumanAgent()
     # pipes = Pipes(-128 * dt, 32)
     # player = Player(int(SCREENWIDTH * 0.2), globfile.SCREENHEIGHT/2, ha, pipes)
-    population = Population(2, dt)
-
+    # dt = FPSCLOCK.tick(FPS)/1000
+    # print(dt)
+    # population = Population(2, dt)
     while True:
         # check for crash here
         population.update()
-        if all(not p.isAlive for p in population.players):
+        if all([not p.isAlive for p in population.players]):
             return population.players[0]
 
         basex = -((-basex + 100) % baseShift)
@@ -84,17 +80,17 @@ def mainGame():
         # draw sprites
         SCREEN.blit(IMAGES['background'], (0,0))
         population.draw(SCREEN)
-        SCREEN.blit(IMAGES['base'], (basex, BASEY))
+        SCREEN.blit(IMAGES['base'], (basex, globfile.BASEY))
         # print score so player overlaps the score
         showScore(population.players[0].score)
 
         pygame.display.update()
-        FPSCLOCK.tick(FPS)
+        FPSCLOCK.tick(globfile.FPS)
 
 
 def showGameOverScreen(player):
     """crashes the player down and shows gameover image"""
-    playerx = SCREENWIDTH * 0.2
+    playerx = globfile.SCREENWIDTH * 0.2
 
     while True:
         for event in pygame.event.get():
@@ -102,7 +98,7 @@ def showGameOverScreen(player):
                 pygame.quit()
                 sys.exit()
             if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
-                if player.y + player.height >= BASEY - 1:
+                if player.y + player.height >= globfile.BASEY - 1:
                     return
         player.dropDead()
         # draw sprites
@@ -111,12 +107,12 @@ def showGameOverScreen(player):
         player.pipes.draw(SCREEN)
         player.draw(SCREEN)
 
-        SCREEN.blit(IMAGES['base'], (playerx-60, BASEY))
+        SCREEN.blit(IMAGES['base'], (playerx-60, globfile.BASEY))
         showScore(player.score)
 
         SCREEN.blit(IMAGES['gameover'], (50, 180))
 
-        FPSCLOCK.tick(FPS)
+        FPSCLOCK.tick(globfile.FPS)
         pygame.display.update()
 
 
@@ -139,10 +135,10 @@ def showScore(score):
     for digit in scoreDigits:
         totalWidth += IMAGES['numbers'][digit].get_width()
 
-    Xoffset = (SCREENWIDTH - totalWidth) / 2
+    Xoffset = (globfile.SCREENWIDTH - totalWidth) / 2
 
     for digit in scoreDigits:
-        SCREEN.blit(IMAGES['numbers'][digit], (Xoffset, SCREENHEIGHT * 0.1))
+        SCREEN.blit(IMAGES['numbers'][digit], (Xoffset, globfile.SCREENHEIGHT * 0.1))
         Xoffset += IMAGES['numbers'][digit].get_width()
 
 

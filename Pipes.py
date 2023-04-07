@@ -8,7 +8,7 @@ import globfile
 
 
 class Pipes:
-    def __init__(self, velocity, seed):
+    def __init__(self, seed, velocity=-128 * globfile.DT):
         self.seed = random.Random(seed)
         self.velocity = velocity
         pipeindex = random.randint(0, len(globfile.PIPES_LIST) - 1)
@@ -78,7 +78,6 @@ class Pipes:
         # y of gap between upper and lower pipe
         gapY = self.seed.randrange(0,
                                    int(globfile.BASEY * 0.6 - globfile.PIPEGAPSIZE))
-        print(gapY)
         gapY += int(globfile.BASEY * 0.2)
         pipeHeight = self.sprites[0].get_height()
         pipeX = globfile.SCREENWIDTH + 10

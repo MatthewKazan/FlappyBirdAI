@@ -38,9 +38,9 @@ class Genome:
     
     def __str__(self):
         ret = "Inputs:  " + str(self.num_inputs) + "\n"
-        ret += "Outputs: " + str(self.num_outputs)
-        ret += "Nodes: " + str([str(x.id) + "\n" for x in self.hidden_nodes])
-        ret += "Connections: " + str([str(x.in_node) + " -> " + str(x.out_node) for x in self.connections])
+        ret += "Outputs: " + str(self.num_outputs)  + "\n"
+        ret += "Nodes: " + str([str(x.id) for x in self.nodes]) + "\n"
+        ret += "Connections: " + str([str(x.in_node.id) + " ->(" + str(round(x.weight, 3)) + ", " + str(x.innovation_num) + ") " + str(x.out_node.id) for x in self.connections]) + "\n"
         return ret
         
         
@@ -49,7 +49,7 @@ class Genome:
         for node in self.nodes:
             node.out_connections = []
         for connection in self.connections:
-            connection.in_node.out_connections.append(connection.outNode)
+            connection.in_node.out_connections.append(connection)
             
     def next_move(self, input_features: list[float]):
         if len(input_features) != self.num_inputs:
@@ -84,25 +84,26 @@ class Genome:
         output_node = random.choice(non_input_nodes)
         
         # swap the input and output nodes if the input node is on a higher layer than the output node
-        if input_node.layer > output_node.layer:
-            input_node, output_node = (lambda x, y: (y, x))(input_node, output_node)
+        if from_node.layer > to_node.layer:
+            from_node, to_node = (lambda x, y: (y, x))(from_node, to_node)
 
         # create a new connection
         new_connection = Connection(
-            in_node=input_node, out_node=output_node, weight=random.uniform(-1, 1),
-            # TODO: Fix the connection history (do we realy need a connection history class
-            innovation_num=innovation_history.get_innovation_num(input_node, output_node))
+            in_node=from_node, out_node=to_node, weight=random.uniform(-1, 1),
+            # TODO: Fix the connection history (do we really need a connection history class
+            innovation_num=self.get_innovation_num(innovation_history, from_node, to_node))
 
         # add the connection to the genome
         self.connections.append(new_connection)
 
         # add the connection to the nodes
-        input_node.out_connections.append(new_connection)
+        from_node.out_connections.append(new_connection)
         
     def get_innovation_num(self, innovation_history: list, in_node: Node, out_node: Node):
         for innovation in innovation_history:
-            if innovation.matches(self, in_node, out_node):
-                return innovation.innovation_num
+            if innovation.matches_genome(self, in_node, out_node):
+                Exception('Innovation number already exists')
+                return innovation.innovation_number
         
         # if it is a new mutation, add it to the history
         connection_innovation_number = glob.next_connection_number
@@ -121,7 +122,10 @@ class Genome:
             self.add_connection(innovation_history)
             return
         # get a random connection to split that is not the bias node connection
-        new_connection = random.choice(filter(lambda c: c.in_node.id != self.bias_node_id, self.connections))
+        new_connection = random.choice(self.connections)
+        while new_connection.in_node.id == self.bias_node_id and len(self.connections) != 1:
+            new_connection = random.choice(self.connections)
+        #new_connection = random.choice(list(filter(lambda c: c.in_node.id != self.bias_node_id, self.connections)))
 
         # disable the connection
         new_connection.enabled = False
@@ -138,6 +142,7 @@ class Genome:
         # get the connection innovation number for the new connection
         connection_innovation_number = self.get_innovation_num(innovation_history, new_node, new_connection.out_node)
         self.connections.append(Connection(new_node, new_connection.out_node, new_connection.weight, connection_innovation_number))
+        new_node.out_connections.append(new_connection.out_node)
         
         # connect the bias node to the new node
         bias_node = self.nodes[self.bias_node_id]   # TODO: not sure if this is correct
@@ -158,7 +163,7 @@ class Genome:
         # calculate how many nodes are in each layer
         nodes_per_layer = [0] * self.layers
         for node in self.nodes:
-            nodes_per_layer[node.layer] += 1
+            nodes_per_layer[node.layer] += 1 # TODO: this is fucked
         
         # return false if a node's output connections are not equal to the amount of nodes in the next layer
         for node in filter(lambda n: n.layer != self.layers - 1, self.nodes):   # don't include the output nodes

@@ -20,10 +20,17 @@ class Node:
             self.output = sigmoid(self.input_sum)
         for connection in self.out_connections:
             if connection.enabled:
-                connection.out_node.input += self.output * connection.weight
+                connection.out_node.input_sum += self.output * connection.weight
                 
     def is_connected_to(self, node):
         for connection in self.out_connections:
             if connection.outNode == node:
                 return True
-        return node.isConnectedTo(self)
+        for connection in node.out_connections:
+            if connection.out_node == self:
+                return True
+        return False
+    
+    def __copy__(self):
+        copy_node = Node(self.id, layer=self.layer)
+        return copy_node
