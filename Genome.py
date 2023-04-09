@@ -141,27 +141,28 @@ class Genome:
             self.add_connection(innovation_history)
             return
         # get a random connection to split that is not the bias node connection
-        new_connection = random.choice(self.connections)
-        while new_connection.in_node.id == self.bias_node_id and len(self.connections) != 1:
-            new_connection = random.choice(self.connections)
+        rand_connection = random.choice(self.connections)
+        while rand_connection.in_node.id == self.bias_node_id and len(self.connections) != 1:
+            rand_connection = random.choice(self.connections)
         # new_connection = random.choice(list(filter(lambda c: c.in_node.id != self.bias_node_id, self.connections)))
 
         # disable the connection
-        new_connection.enabled = False
+        rand_connection.enabled = False
         
         # create a new node
-        new_node = Node(id=len(self.nodes), layer=new_connection.in_node.layer + 1, name='hidden')
+        new_node = Node(id=len(self.nodes), layer=rand_connection.in_node.layer + 1,
+                        name=f'hidden {len(self.nodes) - self.num_inputs - self.num_outputs - 1}')
         self.nodes.append(new_node)
         self.hidden_nodes.append(new_node)
         
         # create a new connection to the new node
-        connection_innovation_number = self.get_innovation_num(innovation_history, new_connection.in_node, new_node)
-        self.connections.append(Connection(new_connection.in_node, new_node, 1, connection_innovation_number))
+        connection_innovation_number = self.get_innovation_num(innovation_history, rand_connection.in_node, new_node)
+        self.connections.append(Connection(rand_connection.in_node, new_node, 1, connection_innovation_number))
         
         # get the connection innovation number for the new connection
-        connection_innovation_number = self.get_innovation_num(innovation_history, new_node, new_connection.out_node)
-        self.connections.append(Connection(new_node, new_connection.out_node, new_connection.weight, connection_innovation_number))
-        new_node.out_connections.append(new_connection.out_node)
+        connection_innovation_number = self.get_innovation_num(innovation_history, new_node, rand_connection.out_node)
+        self.connections.append(Connection(new_node, rand_connection.out_node, rand_connection.weight, connection_innovation_number))
+        new_node.out_connections.append(rand_connection.out_node)
         
         # connect the bias node to the new node
         # bias_node = self.nodes[self.bias_node_id]   # TODO: not sure if this is correct
@@ -169,7 +170,7 @@ class Genome:
         # self.connections.append(Connection(bias_node, new_node, 0, connection_innovation_number))
         
         # push back other layers if needed
-        if new_node.layer == new_connection.out_node.layer:
+        if new_node.layer == rand_connection.out_node.layer:
             # don't include the new node in this filter
             for node in filter(lambda n: n.id != new_node.id, self.nodes):
                 if node.layer >= new_node.layer:

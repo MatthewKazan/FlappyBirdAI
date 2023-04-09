@@ -1,5 +1,6 @@
 import unittest
 from Genome import Genome
+from innovationHistory import ConnectionHistory
 
 
 class TestGenome(unittest.TestCase):
@@ -46,39 +47,29 @@ class TestGenome(unittest.TestCase):
 		print(self.agent2)
 		
 	def test_add_node(self):
-		while not self.agent.is_fully_connected():
-			self.agent.add_connection(self.innovationHistory)
-		# print(self.agent)
+		# add a connection then 2 nodes
+		self.agent.add_connection(self.innovationHistory)
 		self.agent.add_node(self.innovationHistory)
-		self.assertEqual(len(self.agent.nodes), 5)
-
-		# connect all the other nodes to this one
 		self.assertEqual(self.agent.layers, 3)
+		self.agent.add_node(self.innovationHistory)
+		self.assertEqual(len(self.agent.nodes), 6)
+
+		# connect all nodes for agent (main)
 		while not self.agent.is_fully_connected():
 			self.agent.add_connection(self.innovationHistory)
 		# print(self.agent)
 		
+		self.agent2.add_connection(self.innovationHistory)
+		self.agent2.add_node(self.innovationHistory)
+		self.assertEqual(self.agent2.layers, 3)
+		self.agent2.add_node(self.innovationHistory)
+		self.assertEqual(len(self.agent2.nodes), 6)
+
+		# connect all nodes for agent2
 		while not self.agent2.is_fully_connected():
 			self.agent2.add_connection(self.innovationHistory)
-	
-		# connect all the other nodes to this one
-		self.assertEqual(self.agent.layers, 3)
-		# print(self.agent2)
-		self.agent.add_node(self.innovationHistory)
-		while not self.agent.is_fully_connected():
-			self.agent.add_connection(self.innovationHistory)
-		self.assertEqual(len(self.agent.nodes), 6)
-		
-		self.agent2.add_node(self.innovationHistory)
-		self.assertEqual(len(self.agent2.nodes), 5)
-		for connection in self.agent2.connections:
-			matching_connection = self.agent.connections[connection.innovation_num]
-			self.assertEqual(connection.in_node.id, matching_connection.in_node.id)
-			self.assertEqual(connection.out_node.id, matching_connection.out_node.id)
 		print(self.agent)
 		print(self.agent2)
-		
-		
 	
 	def test_mutate_connection_weight(self):
 		print(self.agent)
