@@ -5,6 +5,7 @@ from Node import Node
 from Connection import Connection
 from innovationHistory import ConnectionHistory
 import globfile as glob
+from copy import deepcopy
 
 class Genome:
     def __init__(self, num_inputs: int, num_outputs: int, crossover=False, layers=2):
@@ -13,9 +14,11 @@ class Genome:
         self.layers: int = layers
         self.connections: list[Connection] = []
         self.nodes: list[Node] = []
-        self.input_nodes: list[Node] = []
+        # self.input_nodes: list[Node] = []
         self.output_nodes: list[Node] = []
         self.hidden_nodes: list[Node] = []
+        self.network: list[Node] = []   # a list of nodes in the order they should be fed forward
+        
         # self.next_node_id = 0 # id of the next node to add that is not an input or output node
         
         if crossover:
@@ -23,29 +26,28 @@ class Genome:
 
         # add input nodes equivalent to the number of input features
         for i in range(num_inputs):
-            input_node = Node(id=i, layer=0)
+            input_node = Node(id=i, layer=0, name="Input " + str(i))
             self.nodes.append(input_node)
-            self.input_nodes.append(input_node)
+            # self.input_nodes.append(input_node)
             # self.next_node_id += 1
 
         # add output nodes equivalent to the number of outputs the genome should have (for flappy bird it is 1... flap or dont)
         for i in range(num_outputs):
-            output_node = Node(id=i + num_inputs, layer=1)
+            output_node = Node(id=i + num_inputs, layer=1, name="Output " + str(i))
             self.nodes.append(output_node)
             self.output_nodes.append(output_node)
             # self.next_node_id += 1
 
         # add the bias node
         self.bias_node_id = len(self.nodes)
-        self.nodes.append(Node(id=self.bias_node_id, layer=0))
+        self.nodes.append(Node(id=self.bias_node_id, layer=0, name="Bias"))
     
     def __str__(self):
         ret = "Inputs:  " + str(self.num_inputs) + "\n"
-        ret += "Outputs: " + str(self.num_outputs)  + "\n"
-        ret += "Nodes: " + str([str(x.id) for x in self.nodes]) + "\n"
-        ret += "Connections: " + str([str(x.in_node.id) + " ->(" + str(round(x.weight, 3)) + ", " + str(x.innovation_num) + ") " + str(x.out_node.id) for x in self.connections]) + "\n"
+        ret += "Outputs: " + str(self.num_outputs) + "\n"
+        ret += "Nodes: " + str([f"{x.id}:{x.name}, layer={x.layer}" for x in self.nodes]) + "\n"
+        ret += "Connections: " + str([f"{x.in_node.name} --[w: {round(x.weight, 3)} , inno: {x.innovation_num}, on: {x.enabled}]--> {x.out_node.name}" for x in self.connections]) + "\n"
         return ret
-        
         
     def connect_nodes(self):
         # remove all connections so when reconnecting after mutation there are no errors
@@ -59,7 +61,7 @@ class Genome:
             raise Exception('Input feature list is not equal to number of inputs')
         # add input features to input nodes
         for i in range(self.num_inputs):
-            self.input_nodes[i].output = input_features[i]
+            self.nodes[i].output = input_features[i]
 
         # sort the nodes by layer to perform feedforwarding
         self.nodes.sort(key=lambda n: n.layer)
@@ -73,12 +75,17 @@ class Genome:
             node.input_sum = 0
 
         return outputs
+    
+    def generate_network(self):
+        self.connect_nodes()
+        self.network = deepcopy(self.nodes)
+        self.network.sort(key=lambda n: n.layer)
 
     def add_connection(self, innovation_history):
         # make sure the input node is not an output node and the output node is not an input node
         # filter out output nodes  and nodes already connected to everything as the new input connection
         if self.is_fully_connected():
-            Exception("Genome is fully connected")
+            raise Exception("Genome is fully connected")
             
         # from_node_choices = [node for node in self.nodes if node.layer != self.layers - 1 # TODO: This might be wrong
         #                     and len(node.out_connections) < len(list(filter(lambda n: n.layer > node.layer, self.nodes)))]
@@ -115,7 +122,7 @@ class Genome:
     def get_innovation_num(self, innovation_history: list[ConnectionHistory], in_node: Node, out_node: Node):
         for innovation in innovation_history:
             if innovation.matches_genome(self, in_node, out_node):
-                Exception('Innovation number already exists')
+                # raise Exception('Innovation number already exists')
                 return innovation.innovation_number
         
         # if it is a new mutation, add it to the history
@@ -137,13 +144,13 @@ class Genome:
         new_connection = random.choice(self.connections)
         while new_connection.in_node.id == self.bias_node_id and len(self.connections) != 1:
             new_connection = random.choice(self.connections)
-        #new_connection = random.choice(list(filter(lambda c: c.in_node.id != self.bias_node_id, self.connections)))
+        # new_connection = random.choice(list(filter(lambda c: c.in_node.id != self.bias_node_id, self.connections)))
 
         # disable the connection
         new_connection.enabled = False
         
         # create a new node
-        new_node = Node(id=len(self.nodes), layer=new_connection.in_node.layer + 1)
+        new_node = Node(id=len(self.nodes), layer=new_connection.in_node.layer + 1, name='hidden')
         self.nodes.append(new_node)
         self.hidden_nodes.append(new_node)
         
@@ -157,9 +164,9 @@ class Genome:
         new_node.out_connections.append(new_connection.out_node)
         
         # connect the bias node to the new node
-        bias_node = self.nodes[self.bias_node_id]   # TODO: not sure if this is correct
-        connection_innovation_number = self.get_innovation_num(innovation_history, bias_node, new_node)
-        self.connections.append(Connection(bias_node, new_node, 0, connection_innovation_number))
+        # bias_node = self.nodes[self.bias_node_id]   # TODO: not sure if this is correct
+        # connection_innovation_number = self.get_innovation_num(innovation_history, bias_node, new_node)
+        # self.connections.append(Connection(bias_node, new_node, 0, connection_innovation_number))
         
         # push back other layers if needed
         if new_node.layer == new_connection.out_node.layer:
@@ -175,16 +182,19 @@ class Genome:
         # calculate how many nodes are in each layer
         nodes_per_layer = [0] * self.layers
         for node in self.nodes:
-            nodes_per_layer[node.layer] += 1 # TODO: this is fucked
+            nodes_per_layer[node.layer] += 1
+            
+        max_connections = 0
         
         # return false if a node's output connections are not equal to the amount of nodes in the next layer
-        for node in filter(lambda n: n.layer != self.layers - 1, self.nodes):   # don't include the output nodes
-            if len(node.out_connections) != nodes_per_layer[node.layer + 1]:
-                return False
-            
-        return True
+        for layer in range(self.layers - 1):
+            nodes_in_layers_ahead = sum(nodes_per_layer[layer + 1:])
+            max_connections += nodes_in_layers_ahead * nodes_per_layer[layer]
+                
+        # if it makes it to here it is fully connected
+        return max_connections <= len(self.connections)
         
-    def mutate(self, innovation_history, mutate_weight_chance=0.8, perturb_weight_chance=0.9, new_connection_chance=0.05, new_node_chance=0.03):
+    def mutate(self, innovation_history, mutate_weight_chance=0.8, perturb_weight_chance=0.9, new_connection_chance=0.05, new_node_chance=0.01):
         if len(self.connections) == 0:
             self.add_connection(innovation_history)
         
@@ -236,17 +246,18 @@ class Genome:
         for node in self.nodes:
             child.nodes.append(node.__copy__())
             
-        for node in self.input_nodes:
-            child.input_nodes.append(node.__copy__())
+        # for node in self.input_nodes:
+        #     child.input_nodes.append(node.__copy__())
         
         for node in self.output_nodes:
             child.output_nodes.append(node.__copy__())
         
         # copy all the connections
         for child_connection, is_child_enabled in zip(child_connection_genes, is_enabled):
-            child_in_node = child.get_node(child_connection.in_node.id)
-            child_out_node = child.get_node(child_connection.out_node.id)
-            child.connections.append(child_connection.__copy__(child_in_node, child_out_node))
+            # child_in_node = child.get_node(child_connection.in_node.id)
+            # child_out_node = child.get_node(child_connection.out_node.id)
+            # child.connections.append(child_connection.__copy__(child_in_node, child_out_node))
+            child.connections.append(child_connection.__copy__())
             child_connection.enabled = is_child_enabled
         
         child.connect_nodes()
@@ -258,16 +269,16 @@ class Genome:
         for node in self.nodes:
             copy.nodes.append(node.__copy__())
 
-        for node in self.input_nodes:
-            copy.input_nodes.append(node.__copy__())
+        # for node in self.input_nodes:
+        #     copy.input_nodes.append(node.__copy__())
 
         for node in self.output_nodes:
             copy.output_nodes.append(node.__copy__())
             
         for connection in self.connections:
-            copy.connections.append(connection.__copy__(copy.get_node(connection.in_node.id),
-                                                        copy.get_node(connection.out_node.id)))
-            
+            # copy.connections.append(connection.__copy__(copy.get_node(connection.in_node.id),
+            #                                             copy.get_node(connection.out_node.id)))
+            copy.connections.append(connection.__copy__())
         copy.bias_node_id = self.bias_node_id
         copy.connect_nodes()
 

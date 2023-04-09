@@ -7,13 +7,16 @@ def sigmoid(x: float):
 
 
 class Node:
-    def __init__(self, id: int, layer: int):
+    def __init__(self, id: int, layer: int, name=""):
         self.id: int = id
         # the input has already been calculated when sending outputs from other nodes
         self.input_sum: int = 0
         self.output: int = 0
         self.out_connections: list[Connection] = []
         self.layer: int = layer
+        
+        # used for testing
+        self.name = name
 
     def feed_forward(self):
         if self.layer != 0:

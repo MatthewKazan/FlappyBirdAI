@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 
 class ConnectionHistory:
 	def __init__(self, in_node_id, out_node_id, innovation_number, innovation_nums):
@@ -5,7 +7,7 @@ class ConnectionHistory:
 		self.out_node_id = out_node_id
 		self.innovation_number = innovation_number
 		# TODO: Check that this copies the list
-		self.innovation_nums = innovation_nums.copy()
+		self.innovation_nums = deepcopy(innovation_nums)
 		
 	def matches_genome(self, genome, in_node, out_node):
 		if self.in_node_id == in_node.id and self.out_node_id == out_node.id:

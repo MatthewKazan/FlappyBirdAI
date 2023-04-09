@@ -10,7 +10,7 @@ class Player:
     """Player class"""
 
     def __init__(self, pipes, x=int(globfile.SCREENWIDTH * 0.2), y=globfile.SCREENHEIGHT / 2, agent=HumanAgent()):
-        self.score = 0 # number of pipes the flappy bird has crossed
+        self.score = 0  # number of pipes the flappy bird has crossed
         self.x = x
         self.y = y
         self.playerVelY = -9  # player's velocity along Y, default same as playerFlapped
@@ -35,7 +35,7 @@ class Player:
                                 self.sprites[0].get_height())
         self.pipes = pipes
         self.isAlive = True
-        self.fitness = 0 # the fitness score used to breed and annihilate the poorly performing children
+        self.fitness = 0  # the fitness score used to breed and annihilate the poorly performing children
         self.lifespan = 0
 
     def flap(self):

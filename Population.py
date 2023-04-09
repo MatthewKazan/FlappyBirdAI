@@ -10,6 +10,7 @@ from HumanAgent import HumanAgent
 from Pipes import Pipes
 from Species import Species
 
+
 class Population:
     def __init__(self, size):
         globfile.next_connection_number = 0
@@ -22,7 +23,8 @@ class Population:
         for i in range(size):
             self.players.append(Player(self.pipes,
                                               agent=Genome(self.n_inputs, self.n_outputs, layers=self.layers)))
-            self.players[i].agent.mutate([])
+            self.players[i].agent.mutate(self.innovationHistory)
+            self.players[i].agent.generate_network()
             # TODO: randomly mutate the genome
             
         if 'win' in sys.platform:
@@ -40,9 +42,12 @@ class Population:
                            'assets/audio/wing' + soundExt)}
 
     def update(self):
-        print([x.innovation_number for x in self.innovationHistory])
-        print(f"###################################################\n{len(self.players)} \n###################################################")
+        # print([x.innovation_number for x in self.innovationHistory])
+        # print(f"###################################################\n{len(self.players)} \n###################################################")
+        i = 0
         for player in self.players:
+            print(f"{i}, {player.agent}")
+            i += 1
             player.update()
             if player.checkCrash():
                 player.isAlive = False
@@ -90,7 +95,7 @@ class Population:
             specie = species[index]
             index = (index + 1) % len(species)
             babies.append(Player(self.pipes, agent=specie.best_player.agent))
-            num_babies = floor(specie.average_fitness() / total_ave  * len(self.players)) - 1
+            num_babies = floor(specie.average_fitness() / total_ave * len(self.players)) - 1
             
             for i in range(num_babies):
                 babies.append(specie.create_new_life_and_new_civilization(self.innovationHistory))
