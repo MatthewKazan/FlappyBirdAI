@@ -42,12 +42,17 @@ def main():
     IMAGES['message'] = pygame.image.load('assets/sprites/message.png').convert_alpha()
     # base (ground) sprite
     IMAGES['base'] = pygame.image.load('assets/sprites/base.png').convert_alpha()
+    NEAT_game_loop()
+    RL_game_loop()
+    
+def NEAT_game_loop():
     population = Population(50)
+
     while True:
         # select random background sprites
         randBg = random.randint(0, len(BACKGROUNDS_LIST) - 1)
         IMAGES['background'] = pygame.image.load(BACKGROUNDS_LIST[randBg]).convert()
-
+    
         FPSCLOCK.tick(globfile.FPS)
         mainGame(population)
         population.birth_new_generation()
@@ -58,6 +63,12 @@ def main():
         if not foundALive:
             raise Exception("No one is alive")
 
+def RL_game_loop():
+    RLAGENT() = blash\\
+    
+    for epoch in epochs:
+        q_learning()
+        
 def mainGame(population):
     basex = -28
     baseShift = IMAGES['base'].get_width() - IMAGES['background'].get_width()
