@@ -1,4 +1,3 @@
-import sys
 import random
 
 import numpy
@@ -14,7 +13,7 @@ from Pipes import Pipes
 class Player:
     """Player class"""
 
-    def __init__(self, x=int(globfile.SCREENWIDTH * 0.2), y=globfile.SCREENHEIGHT / 2, agent=HumanAgent()):
+    def __init__(self, seed=32, x=int(globfile.SCREENWIDTH * 0.2), y=globfile.SCREENHEIGHT / 2, agent=HumanAgent()):
         self.score = 0  # number of pipes the flappy bird has crossed
         
         self.x = x
@@ -39,7 +38,8 @@ class Player:
         self.height = self.sprites[0].get_height() / 1.5
         self.rect = pygame.Rect(self.x + self.width / 2, self.y + self.height / 2, self.width,
                                 self.height)
-        self.pipes = Pipes(32)
+        self.seed = seed
+        self.pipes = Pipes(self.seed)
         self.isAlive = True
         self.lifespan = 0
         
@@ -66,7 +66,6 @@ class Player:
     def update(self):
         self.lifespan += 1
         decision = self.agent.next_move(self.sight)[0]
-        # print(decision)
         if decision > .51:
             self.flap()
         # rotate the player
@@ -87,7 +86,6 @@ class Player:
         self.pipes.update()
         if self.pipes.passed(self):
             self.score += 1
-        # print(self.agent)
 
     def look_around(self):
         self.sight = [0] * 4
@@ -105,10 +103,10 @@ class Player:
             [0, globfile.SCREENWIDTH], [0, 1])
         # 2 input: y distance to next lower pipe
         self.sight[2] = numpy.interp(
-            max(0, self.pipes.lowerPipes[closest_pipe]['y'] - self.y),
+            (self.pipes.lowerPipes[closest_pipe]['y'] - self.y),
             [0, globfile.SCREENHEIGHT], [0, 1])
         # 3 input: y distance to next upper pipe
-        self.sight[3] = numpy.interp(max(0, self.y - (
+        self.sight[3] = numpy.interp((self.y - (
                 self.pipes.upperPipes[closest_pipe]['y'] + self.pipes.height)),
                                 [0, globfile.SCREENHEIGHT], [0, 1])
 

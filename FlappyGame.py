@@ -1,13 +1,7 @@
-from itertools import cycle
 import random
-import sys
 import pygame
-from pygame.locals import *
 
 import globfile
-from HumanAgent import HumanAgent
-from Pipes import Pipes
-from Player import Player
 from Population import Population
 
 # Source code for game taken from: https://github.com/sourabhv/FlapPyBird
@@ -55,7 +49,7 @@ def main():
         IMAGES['background'] = pygame.image.load(BACKGROUNDS_LIST[randBg]).convert()
 
         FPSCLOCK.tick(globfile.FPS)
-        crashInfo = mainGame(population)
+        mainGame(population)
         population.birth_new_generation()
         foundALive = False
         for p in population.players:
@@ -63,18 +57,11 @@ def main():
                 foundALive = True
         if not foundALive:
             raise Exception("No one is alive")
-        #showGameOverScreen(crashInfo)
-
 
 def mainGame(population):
     basex = -28
     baseShift = IMAGES['base'].get_width() - IMAGES['background'].get_width()
-    #ha = HumanAgent()
-    # pipes = Pipes(-128 * dt, 32)
-    # player = Player(int(SCREENWIDTH * 0.2), globfile.SCREENHEIGHT/2, ha, pipes)
-    # dt = FPSCLOCK.tick(FPS)/1000
-    # print(dt)
-    # population = Population(2, dt)
+
     while True:
         # draw sprites
         SCREEN.blit(IMAGES['background'], (0,0))
@@ -91,53 +78,12 @@ def mainGame(population):
                 foundALive = True
         if not foundALive:
             population.global_best_score = 0
-            return population.players[0]
+            return
 
         basex = -((-basex + 100) % baseShift)
 
 
         population.update()
-
-
-
-def showGameOverScreen(player):
-    """crashes the player down and shows gameover image"""
-    playerx = globfile.SCREENWIDTH * 0.2
-
-    while True:
-        for event in pygame.event.get():
-            if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
-                pygame.quit()
-                sys.exit()
-            if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
-                if player.y + player.height >= globfile.BASEY - 1:
-                    return
-        player.drop_dead()
-        # draw sprites
-        SCREEN.blit(IMAGES['background'], (0,0))
-
-        player.pipes.draw(SCREEN)
-        player.draw(SCREEN)
-
-        SCREEN.blit(IMAGES['base'], (playerx-60, globfile.BASEY))
-        showScore(player.score)
-
-        SCREEN.blit(IMAGES['gameover'], (50, 180))
-
-        FPSCLOCK.tick(globfile.FPS)
-        pygame.display.update()
-
-
-def playerShm(playerShm):
-    """oscillates the value of playerShm['val'] between 8 and -8"""
-    if abs(playerShm['val']) == 8:
-        playerShm['dir'] *= -1
-
-    if playerShm['dir'] == 1:
-        playerShm['val'] += 1
-    else:
-        playerShm['val'] -= 1
-
 
 def showScore(score):
     """displays score in center of screen"""

@@ -1,15 +1,8 @@
-import sys
 from math import floor
-
-import pygame
-
 from Player import Player
 import globfile
 from Genome import Genome
-from HumanAgent import HumanAgent
-from Pipes import Pipes
 from Species import Species
-from copy import deepcopy
 
 
 class Population:
@@ -27,7 +20,6 @@ class Population:
         self.generation_players = []
         self.species: list[Species] = []
         
-        self.mass_extinction_event = False
         self.new_stage = False
         self.generations_since_new_world = 0
         
@@ -35,29 +27,10 @@ class Population:
         self.n_outputs = 1
         self.layers = 2
         for _ in range(size):
-            # TODO: check if the new player is made correctly
             new_player = Player(agent=Genome(self.n_inputs, self.n_outputs, layers=self.layers))
             self.players.append(new_player)
-            # while not new_player.agent.is_fully_connected():
-            #     new_player.agent.add_connection(self.innovationHistory)
             new_player.agent.mutate(self.innovationHistory)
             new_player.agent.generate_network()
-            
-            # TODO: randomly mutate the genome
-            
-        if 'win' in sys.platform:
-            soundExt = '.wav'
-        else:
-            soundExt = '.ogg'
-
-        self.sounds = {'die': pygame.mixer.Sound('assets/audio/die' + soundExt),
-                       'hit': pygame.mixer.Sound('assets/audio/hit' + soundExt),
-                       'point': pygame.mixer.Sound(
-                           'assets/audio/point' + soundExt),
-                       'swoosh': pygame.mixer.Sound(
-                           'assets/audio/swoosh' + soundExt),
-                       'wing': pygame.mixer.Sound(
-                           'assets/audio/wing' + soundExt)}
 
     def update(self):
         for player in self.players:
@@ -76,15 +49,6 @@ class Population:
             if player.isAlive:
                 return False
         return True
-    
-    def set_best_player(self):
-        temp_best = self.species[0].players[0]
-        temp_best.generation = self.generation
-        
-        if temp_best.score >= self.best_score:
-            self.generation_players.append(temp_best.__copy__())
-            self.best_score = temp_best.score
-            self.best_player = temp_best.__copy__()
 
     def create_species(self):
         species = []
@@ -128,8 +92,6 @@ class Population:
         return total / len(species)
     
     def birth_new_generation(self):  # natural selection
-        # species = self.create_species()
-        self.pipes = Pipes(32)
         self.calculate_fitness_level()
         prev_best = sorted(self.players, key=lambda p: p.fitness, reverse=True)[0] #TODO: probably doesnt get the best player
         print("Best player's fitness:", prev_best.fitness)
@@ -138,14 +100,10 @@ class Population:
         self.speciate()
         self.calculate_fitness_level()
         self.sort_species()
-        if self.mass_extinction_event:
-            self.mass_extinction()
-            self.mass_extinction_event = False
             
-        self.cull_species()  # kill the birds that haven't learned how to fly
-        self.set_best_player()  # save this generation's best player (tom brady bird)
-        self.kill_stale_species(threshold=15)  # kill the species that haven't improved in threshold=15 generations
-        self.kill_bad_species()  # kill the species that are so bad they don't deserve the chance to reproduce
+        # kill the birds that haven't learned how to fly
+        # kill the species that are so bad they don't deserve the chance to reproduce
+        self.bye_bye_idiots(threshold=15)  # kill the species that haven't improved in threshold=15 generations
         
         print(f"Generation: {self.generation}, mutations: {len(self.innovationHistory)}, species: {len(self.species)} =======================")
         
@@ -163,13 +121,9 @@ class Population:
         # first we need to keep the best
         if len(baby_birds) < len(self.players):
             baby_birds.append(prev_best.__copy__())
-        
-        # print(f"baby birds: {len(baby_birds)}")
-        # print(f"players: {len(self.players)}")
-        # print(f"species: {len(self.species)}")
+
         while len(baby_birds) < len(self.players):
             baby_birds.append(self.species[0].hatch_egg(self.innovationHistory))  # only take from the best species b/c elitism
-            # baby_birds[-1].isAlive = True
 
         # aliasing errors suck so lets be extra careful
         self.players.clear()
@@ -180,23 +134,23 @@ class Population:
         # unscramble the baby birds brains
         for baby_bird in self.players:
             baby_bird.agent.generate_network()
-    
-    def mass_extinction(self):
-        for i in range(5, len(self.species)):
-            del self.species[i][1:]
             
-    def cull_species(self):
+    def bye_bye_idiots(self, threshold=15):
+        species_to_kill = []
         for specie in self.species:
             specie.cull()
             specie.share_fitness()
+            if len(specie.players) == 0:
+                species_to_kill.append(specie)
             specie.set_average_fitness()
             
-    def kill_stale_species(self, threshold=15):
+        for specie in species_to_kill:
+            self.species.remove(specie)
+            
         for specie in self.species[2:]:
             if specie.staleness >= threshold:
                 self.species.remove(specie)
                 
-    def kill_bad_species(self):
         sum_of_species_average = sum([specie.average_fitness for specie in self.species])
         
         for specie in self.species[1:]:

@@ -5,3 +5,4 @@ algorithm.
 
 Resources:
 - [Source for Flappy Bird Game](https://github.com/sourabhv/FlapPyBird)
+- [Based on Code Bullet Implementation](https://github.com/Code-Bullet/Flappy-Bird-AI)

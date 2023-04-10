@@ -14,12 +14,9 @@ class Genome:
         self.layers: int = layers
         self.connections: list[Connection] = []
         self.nodes: list[Node] = []
-        # self.input_nodes: list[Node] = []
         self.output_nodes: list[Node] = []
         self.hidden_nodes: list[Node] = []
         self.network: list[Node] = []   # a list of nodes in the order they should be fed forward
-        
-        # self.next_node_id = 0 # id of the next node to add that is not an input or output node
         
         if crossover:
             return 
@@ -28,18 +25,14 @@ class Genome:
         for i in range(num_inputs):
             input_node = Node(id=i, layer=0, name="Input " + str(i))
             self.nodes.append(input_node)
-            # self.input_nodes.append(input_node)
-            # self.next_node_id += 1
 
         # add output nodes equivalent to the number of outputs the genome should have (for flappy bird it is 1... flap or dont)
         for i in range(num_outputs):
             output_node = Node(id=i + num_inputs, layer=1, name="Output " + str(i))
             self.nodes.append(output_node)
             self.output_nodes.append(output_node)
-            # self.next_node_id += 1
 
         # add the bias node
-        # self.bias_node_id = len(self.nodes)
         self.bias_node = Node(id=len(self.nodes), layer=0, name="Bias")
         self.nodes.append(self.bias_node)
     
@@ -113,13 +106,11 @@ class Genome:
         self.connections.append(new_connection)
 
         # add the connection to the nodes
-        # from_node.out_connections.append(new_connection)
         self.connect_nodes()
         
     def get_innovation_num(self, innovation_history: list[ConnectionHistory], in_node: Node, out_node: Node):
         for innovation in innovation_history:
             if innovation.matches_genome(self, in_node, out_node):
-                # raise Exception('Innovation number already exists')
                 return innovation.innovation_number
         
         # if it is a new mutation, add it to the history
@@ -141,7 +132,6 @@ class Genome:
         rand_connection = random.choice(self.connections)
         while rand_connection.in_node.id == self.bias_node.id and len(self.connections) != 1:
             rand_connection = random.choice(self.connections)
-        # new_connection = random.choice(list(filter(lambda c: c.in_node.id != self.bias_node_id, self.connections)))
 
         # disable the connection
         rand_connection.enabled = False
@@ -161,7 +151,7 @@ class Genome:
         self.connections.append(Connection(new_node, rand_connection.out_node, rand_connection.weight, connection_innovation_number))
         new_node.out_connections.append(rand_connection.out_node)
         
-        # connect the bias node to the new node  # TODO: not sure if this is correct
+        # connect the bias node to the new node  
         connection_innovation_number = self.get_innovation_num(innovation_history, self.bias_node, new_node)
         self.connections.append(Connection(self.bias_node, new_node, 0, connection_innovation_number))
         
@@ -179,7 +169,6 @@ class Genome:
         # calculate how many nodes are in each layer
         nodes_per_layer = [0] * self.layers
         for node in self.nodes:
-            # print(f"node layer: {node.layer}, layers: {len(nodes_per_layer)}")
             nodes_per_layer[node.layer] += 1
             
         max_connections = 0
@@ -244,9 +233,6 @@ class Genome:
         for node in self.nodes:
             child.nodes.append(node.__copy__())
             
-        # for node in self.input_nodes:
-        #     child.input_nodes.append(node.__copy__())
-        
         for node in self.output_nodes:
             child.output_nodes.append(node.__copy__())
         
@@ -255,7 +241,6 @@ class Genome:
             child.connections.append(child_connection.__copy__())
             child_connection.enabled = is_child_enabled
         
-        # child.layers = child.output_nodes[0].layer + 1
         child.connect_nodes()
         return child
 
@@ -267,23 +252,6 @@ class Genome:
         return None
     
     def __copy__(self):
-        # copy = Genome(self.num_inputs, self.num_outputs, True, layers=self.layers)
-        #
-        # for node in self.nodes:
-        #     copy.nodes.append(node.__copy__())
-        #
-        # # for node in self.input_nodes:
-        # #     copy.input_nodes.append(node.__copy__())
-        #
-        # for node in self.output_nodes:
-        #     copy.output_nodes.append(node.__copy__())
-        #
-        # for connection in self.connections:
-        #     # copy.connections.append(connection.__copy__(copy.get_node(connection.in_node.id),
-        #     #                                             copy.get_node(connection.out_node.id)))
-        #     copy.connections.append(connection.__copy__())
-        # copy.bias_node_id = self.bias_node_id
-        # copy.connect_nodes()
         copy = deepcopy(self)
 
         return copy
