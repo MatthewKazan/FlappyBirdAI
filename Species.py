@@ -1,4 +1,4 @@
-from random import random
+from random import random, uniform
 
 from Player import Player
 
@@ -6,7 +6,7 @@ from Player import Player
 class Species:
     def __init__(self, player=None):
         self.players = []
-        self.best_score = 0
+        self.best_fitness = 0
         self.best_agent = None
         self.best_player = None
         self.average_fitness = 0
@@ -19,7 +19,7 @@ class Species:
         if player is not None:
             self.players.append(player)
             self.best_player = player
-            self.best_score = player.fitness_level()
+            self.best_score = player.fitness
             
     def is_in_species(self, agent: 'Genome'):
         disjoint = self.get_disjoint(agent, self.best_player.agent)
@@ -30,8 +30,8 @@ class Species:
     
     def add_player(self, player):
         self.players.append(player)
-        if player.fitness_level() > self.best_score:
-            self.best_score = player.fitness_level()
+        if player.fitness > self.best_score:
+            self.best_score = player.fitness
             self.best_player = player
 
     def average_diff(self, genome, genome1):
@@ -56,31 +56,31 @@ class Species:
         return len(genome.connections) + len(genome1.connections) - 2 * joint_genes
     
     def set_average_fitness(self):
-        total_fitness = sum([player.fitness_level() for player in self.players])
+        total_fitness = sum([player.fitness for player in self.players])
         self.average_fitness = total_fitness / len(self.players)
     
     def sort_species(self):
-        self.players.sort(key=lambda p: p.fitness_level(), reverse=True)
+        self.players.sort(key=lambda p: p.fitness, reverse=True)
         
         if len(self.players) == 0:
             self.staleness = 200
             return
         
         # check for new best player
-        if self.best_score <= self.players[0].fitness_level():
+        if self.best_score <= self.players[0].fitness:
             self.staleness += 1
         else:
             self.staleness = 0
-            self.best_score = self.players[0].fitness_level()
+            self.best_score = self.players[0].fitness
             self.best_player = self.players[0].__copy__()
             self.best_agent = self.players[0].agent.__copy__()
             
     def get_pseudo_random_player(self):
-        score_sum = sum([player.fitness_level() for player in self.players])
-        rand = random() * score_sum
+        fitness_sum = sum([player.fitness for player in self.players])
+        rand = random() * fitness_sum
         seen_scores = 0
         for player in self.players:
-            seen_scores += player.fitness_level()
+            seen_scores += player.fitness
             if seen_scores >= rand:
                 return player
         Exception("No player found")
@@ -93,7 +93,7 @@ class Species:
             mom = self.get_pseudo_random_player()
             dad = self.get_pseudo_random_player()
             
-            if mom.fitness_level() < dad.fitness_level():
+            if mom.fitness < dad.fitness:
                 my_baby_brain = dad.agent.crossover(mom.agent, innovation_history)
             else:
                 my_baby_brain = mom.agent.crossover(dad.agent, innovation_history)
@@ -102,16 +102,16 @@ class Species:
         return my_baby
     
     def hatch_egg(self, innovation_history, clone_chance=0.25):
-        if random() < clone_chance:
+        if uniform(0, 1) < clone_chance:  # random.uniform
             baby_bird = self.get_pseudo_random_player().__copy__()
         else:
             mama_bird = self.get_pseudo_random_player()
             papa_bird = self.get_pseudo_random_player()
             
-            if mama_bird.fitness_level() < papa_bird.fitness_level():
-                baby_bird_brain = papa_bird.agent.crossover(mama_bird.agent, innovation_history)
+            if mama_bird.fitness < papa_bird.fitness:
+                baby_bird_brain = papa_bird.agent.crossover(mama_bird.agent)
             else:
-                baby_bird_brain = mama_bird.agent.crossover(papa_bird.agent, innovation_history)
+                baby_bird_brain = mama_bird.agent.crossover(papa_bird.agent)
             baby_bird = Player(papa_bird.pipes, agent=baby_bird_brain)
             
         baby_bird.agent.mutate(innovation_history)

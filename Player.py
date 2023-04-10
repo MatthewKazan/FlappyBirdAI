@@ -110,7 +110,7 @@ class Player:
             self.playerVelY += self.playerAccY
             
     def fitness_level(self):
-        return 1 + self.score ** 2 + self.lifespan / 20
+        self.fitness = 1 + self.score ** 2 + self.lifespan / 20
             
     def __copy__(self):
         copy = Player(self.pipes)

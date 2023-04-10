@@ -120,7 +120,7 @@ class Population:
             if not found_species:
                 self.species.append(Species(player))
                 
-    def fitness_level(self):
+    def calculate_fitness_level(self):
         for player in self.players:
             player.fitness_level()
             
@@ -157,7 +157,7 @@ class Population:
         
         prev_best = self.players[0]
         self.speciate()
-        self.fitness_level()
+        self.calculate_fitness_level()
         self.sort_species()
         
         if self.mass_extinction_event:
@@ -186,6 +186,9 @@ class Population:
         if len(baby_birds) < len(self.players):
             baby_birds.append(prev_best.__copy__())
         
+        print(f"baby birds: {len(baby_birds)}")
+        print(f"players: {len(self.players)}")
+        print(f"species: {len(self.species)}")
         while len(baby_birds) < len(self.players):
             baby_birds.append(self.species[0].hatch_egg(self.innovationHistory))  # only take from the best species b/c elitism
 

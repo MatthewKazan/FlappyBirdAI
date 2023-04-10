@@ -166,9 +166,9 @@ class Genome:
         new_node.out_connections.append(rand_connection.out_node)
         
         # connect the bias node to the new node
-        # bias_node = self.nodes[self.bias_node_id]   # TODO: not sure if this is correct
-        # connection_innovation_number = self.get_innovation_num(innovation_history, bias_node, new_node)
-        # self.connections.append(Connection(bias_node, new_node, 0, connection_innovation_number))
+        bias_node = self.nodes[self.bias_node_id]   # TODO: not sure if this is correct
+        connection_innovation_number = self.get_innovation_num(innovation_history, bias_node, new_node)
+        self.connections.append(Connection(bias_node, new_node, 0, connection_innovation_number))
         
         # push back other layers if needed
         if new_node.layer == rand_connection.out_node.layer:
@@ -184,6 +184,7 @@ class Genome:
         # calculate how many nodes are in each layer
         nodes_per_layer = [0] * self.layers
         for node in self.nodes:
+            # print(f"node layer: {node.layer}, layers: {len(nodes_per_layer)}")
             nodes_per_layer[node.layer] += 1
             
         max_connections = 0
@@ -214,9 +215,9 @@ class Genome:
         if rand < new_node_chance:
             self.add_node(innovation_history)
             
-    def crossover(self, other_parent: 'Genome', innovation_history: list, disable_gene_chance=0.75):
+    def crossover(self, other_parent: 'Genome', disable_gene_chance=0.75):
         child = Genome(self.num_inputs, self.num_outputs, crossover=True, layers=self.layers)
-        child.bias_node_id = self.bias_node_id # TODO: Might need to store and pass copy of actual bias node
+        child.bias_node_id = self.bias_node_id  # TODO: Might need to store and pass copy of actual bias node
         
         child_connection_genes: list[Connection] = []
         is_enabled: list[bool] = []
@@ -226,7 +227,7 @@ class Genome:
             other_parent_connection = self.matching_connection(other_parent, connection.innovation_num)
             
             # if the two parents have a matching connection gene
-            if not other_parent_connection is None: 
+            if other_parent_connection is not None:
                 if not connection.enabled or not other_parent_connection.enabled:
                     if random.uniform(0, 1) < disable_gene_chance:
                         is_child_connection_enabled = False
@@ -262,6 +263,7 @@ class Genome:
             child.connections.append(child_connection.__copy__())
             child_connection.enabled = is_child_enabled
         
+        child.layers = child.output_nodes[0].layer + 1
         child.connect_nodes()
         return child
 
