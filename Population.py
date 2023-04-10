@@ -63,7 +63,7 @@ class Population:
         self.calculate_fitness_level()
         prev_best = sorted(self.players, key=lambda p: p.fitness, reverse=True)[0] #TODO: probably doesnt get the best player
         print("Best player's fitness:", prev_best.fitness)
-        print("Best player's DNA:\n" + prev_best.agent)
+        #print("Best player's DNA:\n" + prev_best.agent)
 
         self.speciate()
         self.calculate_fitness_level()

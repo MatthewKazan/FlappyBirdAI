@@ -43,7 +43,7 @@ def main():
     # base (ground) sprite
     IMAGES['base'] = pygame.image.load('assets/sprites/base.png').convert_alpha()
     NEAT_game_loop()
-    RL_game_loop()
+    #RL_game_loop()
     
 def NEAT_game_loop():
     population = Population(50)
@@ -63,11 +63,6 @@ def NEAT_game_loop():
         if not foundALive:
             raise Exception("No one is alive")
 
-def RL_game_loop():
-    RLAGENT() = blash\\
-    
-    for epoch in epochs:
-        q_learning()
         
 def mainGame(population):
     basex = -28
