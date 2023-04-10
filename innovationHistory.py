@@ -6,7 +6,6 @@ class ConnectionHistory:
 		self.in_node_id = in_node_id
 		self.out_node_id = out_node_id
 		self.innovation_number = innovation_number
-		# TODO: Check that this copies the list
 		self.innovation_nums = deepcopy(innovation_nums)
 		
 	def matches_genome(self, genome, in_node, out_node):

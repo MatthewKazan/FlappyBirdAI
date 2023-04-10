@@ -92,18 +92,16 @@ class Species:
             papa_bird = self.get_pseudo_random_player()
             
             if mama_bird.fitness < papa_bird.fitness:
-                #print(f"crossover {mama_bird.fitness} and {papa_bird.fitness}")
                 baby_bird_brain = papa_bird.agent.crossover(mama_bird.agent)
             else:
                 baby_bird_brain = mama_bird.agent.crossover(papa_bird.agent)
-                #print(f"crossover {mama_bird.fitness} and {papa_bird.fitness}")
             baby_bird = Player(agent=baby_bird_brain)
             
         baby_bird.agent.mutate(innovation_history, new_connection_chance=0.1, new_node_chance=0.03) # , new_connection_chance=0.4, new_node_chance=0.2)
         return baby_bird
     
     def cull(self):
-        # kill off the bottom half of the species
+        # kill off the bottom half of the species but don't kill them if there's <= 2 players in the species
         if len(self.players) <= 2:
             return
         self.sort_species()

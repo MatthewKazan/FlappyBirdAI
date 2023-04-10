@@ -31,33 +31,19 @@ class Population:
     def update(self):
         for player in self.players:
             if player.isAlive:
-                player.look_around()
                 player.update()
                 player.check_crash()
 
             if player.score > self.global_best_score:
                 self.global_best_score = player.score
         
-    def done(self):
-        self.global_best_score = 0
-        for player in self.players:
-            player.check_crash()
-            if player.isAlive:
-                return False
-        return True
-
-    def create_species(self):
-        species = []
-        for player in self.players:
-            found_species = False
-            for specie in species:
-                if specie.is_in_species(player):
-                    specie.add_player(player)
-                    found_species = True
-                    break
-            if not found_species:
-                species.append(Species(player))
-        return species
+    # def done(self):
+    #     self.global_best_score = 0
+    #     for player in self.players:
+    #         player.check_crash()
+    #         if player.isAlive:
+    #             return False
+    #     return True
     
     def speciate(self):
         for specie in self.species:
@@ -91,7 +77,7 @@ class Population:
         self.calculate_fitness_level()
         prev_best = sorted(self.players, key=lambda p: p.fitness, reverse=True)[0] #TODO: probably doesnt get the best player
         print("Best player's fitness:", prev_best.fitness)
-        print("Best player's DNA:\n", prev_best.agent)
+        print("Best player's DNA:\n" + prev_best.agent)
 
         self.speciate()
         self.calculate_fitness_level()
@@ -132,16 +118,10 @@ class Population:
             baby_bird.agent.generate_network()
             
     def bye_bye_idiots(self, threshold=15):
-        species_to_kill = []
         for specie in self.species:
             specie.cull()
             specie.share_fitness()
-            if len(specie.players) == 0:
-                species_to_kill.append(specie)
             specie.set_average_fitness()
-            
-        for specie in species_to_kill:
-            self.species.remove(specie)
             
         for specie in self.species[2:]:
             if specie.staleness >= threshold:

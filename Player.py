@@ -33,7 +33,7 @@ class Player:
             pygame.image.load(globfile.PLAYERS_LIST[0][1]).convert_alpha(),
             pygame.image.load(globfile.PLAYERS_LIST[0][2]).convert_alpha(),
         )
-        self.agent: 'Genome' = agent
+        self.agent = agent
         self.width = self.sprites[0].get_width() / 1.5
         self.height = self.sprites[0].get_height() / 1.5
         self.rect = pygame.Rect(self.x + self.width / 2, self.y + self.height / 2, self.width,
@@ -65,6 +65,7 @@ class Player:
 
     def update(self):
         self.lifespan += 1
+        self.look_around()
         decision = self.agent.next_move(self.sight)[0]
         if decision > .51:
             self.flap()
