@@ -142,7 +142,6 @@ class Player:
                 visibleRot = self.playerRot
     
             playerSurface = pygame.transform.rotate(self.sprites[0], visibleRot)
-            pygame.draw.rect(screen, (255, 0, 0), self.rect)
             screen.blit(playerSurface, (self.x, self.y))
             self.pipes.draw(screen)
 
