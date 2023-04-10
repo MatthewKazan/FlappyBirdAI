@@ -78,37 +78,37 @@ def mainGame(population):
         SCREEN.blit(IMAGES['background'], (0,0))
         population.draw(SCREEN)
         SCREEN.blit(IMAGES['base'], (basex, globfile.BASEY))
+        
         # print score so player overlaps the score
         showScore(population.global_best_score)
         pygame.display.update()
         FPSCLOCK.tick(globfile.FPS)
-        # print(len(population.players))
-        foundALive = False
+        
+        found_alive = False
         for p in population.players:
             if p.isAlive:
-                foundALive = True
-        if not foundALive:
+                found_alive = True
+        if not found_alive:
             population.global_best_score = 0
             return
 
         basex = -((-basex + 100) % baseShift)
 
-
         population.update()
 
 def showScore(score):
     """displays score in center of screen"""
-    scoreDigits = [int(x) for x in list(str(score))]
-    totalWidth = 0 # total width of all numbers to be printed
+    score_digits = [int(x) for x in list(str(score))]
+    total_width = 0 # total width of all numbers to be printed
 
-    for digit in scoreDigits:
-        totalWidth += IMAGES['numbers'][digit].get_width()
+    for digit in score_digits:
+        total_width += IMAGES['numbers'][digit].get_width()
 
-    Xoffset = (globfile.SCREENWIDTH - totalWidth) / 2
+    x_offset = (globfile.SCREENWIDTH - total_width) / 2
 
-    for digit in scoreDigits:
-        SCREEN.blit(IMAGES['numbers'][digit], (Xoffset, globfile.SCREENHEIGHT * 0.1))
-        Xoffset += IMAGES['numbers'][digit].get_width()
+    for digit in score_digits:
+        SCREEN.blit(IMAGES['numbers'][digit], (x_offset, globfile.SCREENHEIGHT * 0.1))
+        x_offset += IMAGES['numbers'][digit].get_width()
 
 
 if __name__ == '__main__':

@@ -97,7 +97,7 @@ class Species:
                 baby_bird_brain = mama_bird.agent.crossover(papa_bird.agent)
             baby_bird = Player(agent=baby_bird_brain)
             
-        baby_bird.agent.mutate(innovation_history, new_connection_chance=0.1, new_node_chance=0.03) # , new_connection_chance=0.4, new_node_chance=0.2)
+        baby_bird.agent.mutate(innovation_history, new_connection_chance=0.1, new_node_chance=0.03)
         return baby_bird
     
     def cull(self):

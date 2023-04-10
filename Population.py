@@ -36,14 +36,6 @@ class Population:
 
             if player.score > self.global_best_score:
                 self.global_best_score = player.score
-        
-    # def done(self):
-    #     self.global_best_score = 0
-    #     for player in self.players:
-    #         player.check_crash()
-    #         if player.isAlive:
-    #             return False
-    #     return True
     
     def speciate(self):
         for specie in self.species:
@@ -66,12 +58,6 @@ class Population:
         for specie in self.species:
             specie.sort_species()
         self.species.sort(key=lambda s: s.best_score, reverse=True)
-        
-    def total_average_fitness(self, species):
-        total = 0
-        for s in species:
-            total += s.average_fitness
-        return total / len(species)
     
     def birth_new_generation(self):  # natural selection
         self.calculate_fitness_level()
