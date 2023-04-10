@@ -17,12 +17,8 @@ class Population:
         self.innovationHistory = []
         
         self.generation = 1
-        self.generation_players = []
         self.species: list[Species] = []
-        
-        self.new_stage = False
-        self.generations_since_new_world = 0
-        
+                
         self.n_inputs = 4
         self.n_outputs = 1
         self.layers = 2
@@ -35,7 +31,7 @@ class Population:
     def update(self):
         for player in self.players:
             if player.isAlive:
-                player.look_around()  # corresponds to look
+                player.look_around()
                 player.update()
                 player.check_crash()
 
