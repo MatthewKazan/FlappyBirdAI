@@ -3,7 +3,7 @@ from Connection import Connection
 
 
 def sigmoid(x: float):
-    return 1.0 / (1.0 + (math.e ** -x))
+    return 1.0 / (1.0 + (math.e ** (-4.9 * x)))
 
 
 class Node:
@@ -35,5 +35,5 @@ class Node:
         return False
     
     def __copy__(self):
-        copy_node = Node(self.id, layer=self.layer)
+        copy_node = Node(self.id, layer=self.layer, name=self.name)
         return copy_node

@@ -1,6 +1,5 @@
 import unittest
 from Genome import Genome
-from innovationHistory import ConnectionHistory
 
 
 class TestGenome(unittest.TestCase):
@@ -94,6 +93,23 @@ class TestGenome(unittest.TestCase):
 		arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 		del arr[1:]
 		self.assertEqual(arr, [1])
+		
+	def test_crossover(self):
+		base_agent = Genome(num_inputs=1, num_outputs=1, layers=2)
+		while not base_agent.is_fully_connected():
+			base_agent.add_connection(self.innovationHistory)
+		
+		agent_with_node = Genome(num_inputs=1, num_outputs=1, layers=2)
+		while not agent_with_node.is_fully_connected():
+			agent_with_node.add_connection(self.innovationHistory)
+		agent_with_node.add_node(self.innovationHistory)
+		
+		baby1 = agent_with_node.crossover(base_agent)
+		baby2 = base_agent.crossover(agent_with_node)
+		print("base:\n", base_agent)
+		print(baby2)
+		print("added node:\n", agent_with_node)
+		print("baby:\n", baby1)
 	
 	
 if __name__ == '__main__':

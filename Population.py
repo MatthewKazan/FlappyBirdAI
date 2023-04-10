@@ -38,6 +38,8 @@ class Population:
             # TODO: check if the new player is made correctly
             new_player = Player(agent=Genome(self.n_inputs, self.n_outputs, layers=self.layers))
             self.players.append(new_player)
+            # while not new_player.agent.is_fully_connected():
+            #     new_player.agent.add_connection(self.innovationHistory)
             new_player.agent.mutate(self.innovationHistory)
             new_player.agent.generate_network()
             
@@ -58,14 +60,7 @@ class Population:
                            'assets/audio/wing' + soundExt)}
 
     def update(self):
-        # print([x.innovation_number for x in self.innovationHistory])
-        # print(f"###################################################\n{len(self.players)} \n###################################################")
-        # i = 0
         for player in self.players:
-            # print(f"{i}, {player.agent}")
-            # i += 1
-            # player.update()
-            player.check_crash()
             if player.isAlive:
                 player.look_around()  # corresponds to look
                 player.update()
@@ -169,9 +164,9 @@ class Population:
         if len(baby_birds) < len(self.players):
             baby_birds.append(prev_best.__copy__())
         
-        print(f"baby birds: {len(baby_birds)}")
-        print(f"players: {len(self.players)}")
-        print(f"species: {len(self.species)}")
+        # print(f"baby birds: {len(baby_birds)}")
+        # print(f"players: {len(self.players)}")
+        # print(f"species: {len(self.species)}")
         while len(baby_birds) < len(self.players):
             baby_birds.append(self.species[0].hatch_egg(self.innovationHistory))  # only take from the best species b/c elitism
             # baby_birds[-1].isAlive = True
@@ -197,7 +192,7 @@ class Population:
             specie.set_average_fitness()
             
     def kill_stale_species(self, threshold=15):
-        for specie in self.species:
+        for specie in self.species[2:]:
             if specie.staleness >= threshold:
                 self.species.remove(specie)
                 
@@ -206,7 +201,6 @@ class Population:
         
         for specie in self.species[1:]:
             if specie.average_fitness / sum_of_species_average * len(self.players) < 1:
-                # TODO: check that remove works (he uses splice)
                 self.species.remove(specie)
 
     def draw(self, screen):

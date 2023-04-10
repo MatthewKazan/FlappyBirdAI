@@ -26,4 +26,9 @@ class Connection:
         # copy = Connection(in_node, out_node, weight=self.weight, innovation_num=self.innovation_num)
         # copy.enabled = self.enabled
         copy = deepcopy(self)
+        if in_node is not None:
+            copy.in_node = in_node
+        if out_node is not None:
+            copy.out_node = out_node
         return copy
+    

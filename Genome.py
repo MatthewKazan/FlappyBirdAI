@@ -46,8 +46,10 @@ class Genome:
     def __str__(self):
         ret = "Inputs:  " + str(self.num_inputs) + "\n"
         ret += "Outputs: " + str(self.num_outputs) + "\n"
+        ret += f"Layers: {self.layers}\n"
         ret += "Nodes: " + str([f"{x.id}:{x.name}, layer={x.layer}" for x in self.nodes]) + "\n"
-        ret += "Connections: " + str([f"{x.in_node.name} --[w: {round(x.weight, 3)} , inno: {x.innovation_num}, on: {x.enabled}]--> {x.out_node.name}" for x in self.connections]) + "\n"
+        ret += "Connections: " + str([f"{x.in_node.name} --[w: {round(x.weight, 3)} , inno: {x.innovation_num}, on: {x.enabled}]--> {x.out_node.name}"
+                                      for x in sorted(self.connections, key=lambda c: c.innovation_num)]) + "\n"
         return ret
         
     def connect_nodes(self):
@@ -71,7 +73,7 @@ class Genome:
             node.feed_forward()
 
         # get outputs from final layer
-        outputs = [node.output for node in self.output_nodes]
+        outputs = [node.output for node in self.nodes if node.layer == self.layers - 1]
 
         for node in self.nodes:
             node.input_sum = 0
@@ -81,7 +83,8 @@ class Genome:
     def generate_network(self):
         self.connect_nodes()
         self.network = []
-        self.network = deepcopy(self.nodes)
+        for node in self.nodes:
+            self.network.append(node.__copy__())
         self.network.sort(key=lambda n: n.layer)
 
     def add_connection(self, innovation_history):
@@ -249,13 +252,10 @@ class Genome:
         
         # copy all the connections
         for child_connection, is_child_enabled in zip(child_connection_genes, is_enabled):
-            # child_in_node = child.get_node(child_connection.in_node.id)
-            # child_out_node = child.get_node(child_connection.out_node.id)
-            # child.connections.append(child_connection.__copy__(child_in_node, child_out_node))
             child.connections.append(child_connection.__copy__())
             child_connection.enabled = is_child_enabled
         
-        child.layers = child.output_nodes[0].layer + 1
+        # child.layers = child.output_nodes[0].layer + 1
         child.connect_nodes()
         return child
 
