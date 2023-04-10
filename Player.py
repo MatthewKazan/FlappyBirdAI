@@ -1,20 +1,24 @@
 import sys
+import random
 
 import numpy
 import pygame
 import globfile
 from HumanAgent import HumanAgent
+from Pipes import Pipes
+
+
 # from copy import deepcopy
 
 
 class Player:
     """Player class"""
 
-    def __init__(self, pipes, x=int(globfile.SCREENWIDTH * 0.2), y=globfile.SCREENHEIGHT / 2, agent=HumanAgent()):
+    def __init__(self, x=int(globfile.SCREENWIDTH * 0.2), y=globfile.SCREENHEIGHT / 2, agent=HumanAgent()):
         self.score = 0  # number of pipes the flappy bird has crossed
         
         self.x = x
-        self.y = y
+        self.y = y + random.uniform(-20,20)
         self.playerVelY = -9  # player's velocity along Y, default same as playerFlapped
         self.playerMaxVelY = 10  # max vel along Y, max descend speed
         self.playerMinVelY = -8  # min vel along Y, max ascend speed
@@ -31,11 +35,11 @@ class Player:
             pygame.image.load(globfile.PLAYERS_LIST[0][2]).convert_alpha(),
         )
         self.agent: 'Genome' = agent
-        self.width = self.sprites[0].get_width()
-        self.height = self.sprites[0].get_height()
-        self.rect = pygame.Rect(self.x, self.y, self.sprites[0].get_width(),
-                                self.sprites[0].get_height())
-        self.pipes = pipes
+        self.width = self.sprites[0].get_width() / 1.5
+        self.height = self.sprites[0].get_height() / 1.5
+        self.rect = pygame.Rect(self.x + self.width / 2, self.y + self.height / 2, self.width,
+                                self.height)
+        self.pipes = Pipes(32)
         self.isAlive = True
         self.lifespan = 0
         
@@ -51,18 +55,19 @@ class Player:
         self.playerFlapped = True
 
     def check_crash(self):
-        self.rect = pygame.Rect(self.x, self.y, self.sprites[0].get_width(),
-                                self.sprites[0].get_height())
+        self.rect = pygame.Rect(self.x + self.width / 2, self.y + self.height / 2, self.width,
+                                self.height)
 
-        if self.y + self.height >= globfile.BASEY - 1 or self.y < 0:
+        if not self.isAlive or self.y + self.height * 2 >= globfile.BASEY - 1 or self.y < 0:
             self.isAlive = False
-        elif self.pipes.collide(self)[0] or self.pipes.collide(self)[1]:
+        elif not self.isAlive or self.pipes.collide(self)[0] or self.pipes.collide(self)[1]:
             self.isAlive = False
 
     def update(self):
         self.lifespan += 1
         decision = self.agent.next_move(self.sight)[0]
-        if decision > .5:
+        # print(decision)
+        if decision > .51:
             self.flap()
         # rotate the player
         if self.playerRot > -90:
@@ -79,22 +84,30 @@ class Player:
 
         playerHeight = self.sprites[0].get_height()
         self.y += min(self.playerVelY, globfile.BASEY - self.y - playerHeight)
+        self.pipes.update()
+        if self.pipes.passed(self):
+            self.score += 1
         # print(self.agent)
 
     def look_around(self):
         self.sight = [0] * 4
         closest_pipe = 0
+        # 0 input: player y velocity
         self.sight[0] = numpy.interp(self.playerVelY, [-10, 10], [-1, 1])
+        # Get the closest pipe
         if self.x < self.pipes.lowerPipes[1]['x'] and \
-                (self.pipes.lowerPipes[0]['x'] < self.x or
+                (self.pipes.lowerPipes[0]['x'] + self.pipes.width / 2 < self.x or
                  self.pipes.lowerPipes[0]['x'] > self.pipes.lowerPipes[1]['x']):
             closest_pipe = 1
+        # 1 input: x distance to next pipe
         self.sight[1] = numpy.interp(
             self.pipes.lowerPipes[closest_pipe]['x'] - self.x,
             [0, globfile.SCREENWIDTH], [0, 1])
+        # 2 input: y distance to next lower pipe
         self.sight[2] = numpy.interp(
             max(0, self.pipes.lowerPipes[closest_pipe]['y'] - self.y),
             [0, globfile.SCREENHEIGHT], [0, 1])
+        # 3 input: y distance to next upper pipe
         self.sight[3] = numpy.interp(max(0, self.y - (
                 self.pipes.upperPipes[closest_pipe]['y'] + self.pipes.height)),
                                 [0, globfile.SCREENHEIGHT], [0, 1])
@@ -110,10 +123,10 @@ class Player:
             self.playerVelY += self.playerAccY
             
     def fitness_level(self):
-        self.fitness = 1 + self.score ** 2 + self.lifespan / 20
+        self.fitness = 1 + self.score ** 2 + self.lifespan
             
     def __copy__(self):
-        copy = Player(self.pipes)
+        copy = Player()
         copy.agent = self.agent.__copy__()
         copy.fitness = self.fitness
         copy.agent.generate_network()
@@ -129,5 +142,7 @@ class Player:
                 visibleRot = self.playerRot
     
             playerSurface = pygame.transform.rotate(self.sprites[0], visibleRot)
+            pygame.draw.rect(screen, (255, 0, 0), self.rect)
             screen.blit(playerSurface, (self.x, self.y))
+            self.pipes.draw(screen)
 

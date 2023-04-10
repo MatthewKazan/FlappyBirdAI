@@ -39,8 +39,9 @@ class Genome:
             # self.next_node_id += 1
 
         # add the bias node
-        self.bias_node_id = len(self.nodes)
-        self.nodes.append(Node(id=self.bias_node_id, layer=0, name="Bias"))
+        # self.bias_node_id = len(self.nodes)
+        self.bias_node = Node(id=len(self.nodes), layer=0, name="Bias")
+        self.nodes.append(self.bias_node)
     
     def __str__(self):
         ret = "Inputs:  " + str(self.num_inputs) + "\n"
@@ -63,6 +64,7 @@ class Genome:
         for i in range(self.num_inputs):
             self.nodes[i].output = input_features[i]
 
+        self.bias_node.output = 1
         # sort the nodes by layer to perform feedforwarding
         self.nodes.sort(key=lambda n: n.layer)
         for node in self.nodes:
@@ -86,17 +88,7 @@ class Genome:
         # make sure the input node is not an output node and the output node is not an input node
         # filter out output nodes  and nodes already connected to everything as the new input connection
         if self.is_fully_connected():
-            raise Exception("Genome is fully connected")
-            
-        # from_node_choices = [node for node in self.nodes if node.layer != self.layers - 1 # TODO: This might be wrong
-        #                     and len(node.out_connections) < len(list(filter(lambda n: n.layer > node.layer, self.nodes)))]
-        # from_node: Node = random.choice(from_node_choices)
-        # # filter out input nodes and previously chosen layer and nodes already connected to as the new output connection
-        # to_node_choices = [node for node in self.nodes if node.layer != 0
-        #                        and node.id != from_node.layer
-        #                        and not from_node.is_connected_to(node)]
-        # 
-        # to_node = random.choice(to_node_choices)
+            return
         
         from_node: Node = random.choice(self.nodes)
         to_node: Node = random.choice(self.nodes)
@@ -118,7 +110,8 @@ class Genome:
         self.connections.append(new_connection)
 
         # add the connection to the nodes
-        from_node.out_connections.append(new_connection)
+        # from_node.out_connections.append(new_connection)
+        self.connect_nodes()
         
     def get_innovation_num(self, innovation_history: list[ConnectionHistory], in_node: Node, out_node: Node):
         for innovation in innovation_history:
@@ -143,7 +136,7 @@ class Genome:
             return
         # get a random connection to split that is not the bias node connection
         rand_connection = random.choice(self.connections)
-        while rand_connection.in_node.id == self.bias_node_id and len(self.connections) != 1:
+        while rand_connection.in_node.id == self.bias_node.id and len(self.connections) != 1:
             rand_connection = random.choice(self.connections)
         # new_connection = random.choice(list(filter(lambda c: c.in_node.id != self.bias_node_id, self.connections)))
 
@@ -165,10 +158,9 @@ class Genome:
         self.connections.append(Connection(new_node, rand_connection.out_node, rand_connection.weight, connection_innovation_number))
         new_node.out_connections.append(rand_connection.out_node)
         
-        # connect the bias node to the new node
-        bias_node = self.nodes[self.bias_node_id]   # TODO: not sure if this is correct
-        connection_innovation_number = self.get_innovation_num(innovation_history, bias_node, new_node)
-        self.connections.append(Connection(bias_node, new_node, 0, connection_innovation_number))
+        # connect the bias node to the new node  # TODO: not sure if this is correct
+        connection_innovation_number = self.get_innovation_num(innovation_history, self.bias_node, new_node)
+        self.connections.append(Connection(self.bias_node, new_node, 0, connection_innovation_number))
         
         # push back other layers if needed
         if new_node.layer == rand_connection.out_node.layer:
@@ -217,7 +209,7 @@ class Genome:
             
     def crossover(self, other_parent: 'Genome', disable_gene_chance=0.75):
         child = Genome(self.num_inputs, self.num_outputs, crossover=True, layers=self.layers)
-        child.bias_node_id = self.bias_node_id  # TODO: Might need to store and pass copy of actual bias node
+        child.bias_node = self.bias_node.__copy__()  # switched to using actual bias node
         
         child_connection_genes: list[Connection] = []
         is_enabled: list[bool] = []

@@ -57,6 +57,12 @@ def main():
         FPSCLOCK.tick(globfile.FPS)
         crashInfo = mainGame(population)
         population.birth_new_generation()
+        foundALive = False
+        for p in population.players:
+            if p.isAlive:
+                foundALive = True
+        if not foundALive:
+            raise Exception("No one is alive")
         #showGameOverScreen(crashInfo)
 
 
@@ -70,22 +76,28 @@ def mainGame(population):
     # print(dt)
     # population = Population(2, dt)
     while True:
-        # check for crash here
-        population.update()
-        if all([not p.isAlive for p in population.players]):
-            return population.players[0]
-
-        basex = -((-basex + 100) % baseShift)
-
         # draw sprites
         SCREEN.blit(IMAGES['background'], (0,0))
         population.draw(SCREEN)
         SCREEN.blit(IMAGES['base'], (basex, globfile.BASEY))
         # print score so player overlaps the score
-        showScore(population.players[0].score)
-
+        showScore(population.global_best_score)
         pygame.display.update()
         FPSCLOCK.tick(globfile.FPS)
+        # print(len(population.players))
+        foundALive = False
+        for p in population.players:
+            if p.isAlive:
+                foundALive = True
+        if not foundALive:
+            population.global_best_score = 0
+            return population.players[0]
+
+        basex = -((-basex + 100) % baseShift)
+
+
+        population.update()
+
 
 
 def showGameOverScreen(player):

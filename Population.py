@@ -31,13 +31,12 @@ class Population:
         self.new_stage = False
         self.generations_since_new_world = 0
         
-        self.pipes = Pipes(32)
         self.n_inputs = 4
         self.n_outputs = 1
         self.layers = 2
         for _ in range(size):
             # TODO: check if the new player is made correctly
-            new_player = Player(self.pipes, agent=Genome(self.n_inputs, self.n_outputs, layers=self.layers))
+            new_player = Player(agent=Genome(self.n_inputs, self.n_outputs, layers=self.layers))
             self.players.append(new_player)
             new_player.agent.mutate(self.innovationHistory)
             new_player.agent.generate_network()
@@ -68,17 +67,15 @@ class Population:
             # player.update()
             player.check_crash()
             if player.isAlive:
-                self.sounds['hit'].play()
                 player.look_around()  # corresponds to look
                 player.update()
-            if self.pipes.passed(player):
-                player.score += 1
-                self.sounds['point'].play()
+                player.check_crash()
+
             if player.score > self.global_best_score:
                 self.global_best_score = player.score
-        self.pipes.update()
         
     def done(self):
+        self.global_best_score = 0
         for player in self.players:
             player.check_crash()
             if player.isAlive:
@@ -137,29 +134,15 @@ class Population:
     
     def birth_new_generation(self):  # natural selection
         # species = self.create_species()
-        # self.pipes = Pipes(32)
-        # for specie in species:
-        #     specie.sort_species()
-        # species.sort(key=lambda x: x.best_score, reverse=True)
-        #
-        # babies = []
-        # index = 0
-        # total_ave = self.total_average_fitness(species)
-        # while len(babies) < len(self.players):
-        #     specie = species[index]
-        #     index = (index + 1) % len(species)
-        #     babies.append(Player(self.pipes, agent=specie.best_player.agent))
-        #     num_babies = floor(specie.average_fitness() / total_ave * len(self.players)) - 1
-        #
-        #     for i in range(num_babies):
-        #         babies.append(specie.create_new_life_and_new_civilization(self.innovationHistory))
-        # self.players = babies
-        
-        prev_best = self.players[0]
+        self.pipes = Pipes(32)
+        self.calculate_fitness_level()
+        prev_best = sorted(self.players, key=lambda p: p.fitness, reverse=True)[0] #TODO: probably doesnt get the best player
+        print("Best player's fitness:", prev_best.fitness)
+        print("Best player's DNA:\n", prev_best.agent)
+
         self.speciate()
         self.calculate_fitness_level()
         self.sort_species()
-        
         if self.mass_extinction_event:
             self.mass_extinction()
             self.mass_extinction_event = False
@@ -191,9 +174,10 @@ class Population:
         print(f"species: {len(self.species)}")
         while len(baby_birds) < len(self.players):
             baby_birds.append(self.species[0].hatch_egg(self.innovationHistory))  # only take from the best species b/c elitism
+            # baby_birds[-1].isAlive = True
 
         # aliasing errors suck so lets be extra careful
-        self.players = []
+        self.players.clear()
         for bird in baby_birds:
             self.players.append(bird.__copy__())
         self.generation += 1
@@ -228,4 +212,3 @@ class Population:
     def draw(self, screen):
         for player in self.players:
             player.draw(screen)
-        self.pipes.draw(screen)

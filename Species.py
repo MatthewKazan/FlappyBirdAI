@@ -1,5 +1,6 @@
 from random import random, uniform
 
+from Pipes import Pipes
 from Player import Player
 
 
@@ -83,23 +84,23 @@ class Species:
             seen_scores += player.fitness
             if seen_scores >= rand:
                 return player
-        Exception("No player found")
+        raise Exception("No player found")
             
-    def create_new_life_and_new_civilization(self, innovation_history):
-        my_baby = None
-        if random() < 0.25:
-            my_baby = self.get_pseudo_random_player()  # TODO: this might cause problems from not deep copying
-        else:
-            mom = self.get_pseudo_random_player()
-            dad = self.get_pseudo_random_player()
-            
-            if mom.fitness < dad.fitness:
-                my_baby_brain = dad.agent.crossover(mom.agent, innovation_history)
-            else:
-                my_baby_brain = mom.agent.crossover(dad.agent, innovation_history)
-            my_baby = Player(dad.pipes, agent=my_baby_brain)
-        my_baby.agent.mutate(innovation_history)
-        return my_baby
+    # def create_new_life_and_new_civilization(self, innovation_history):
+    #     my_baby = None
+    #     if random() < 0.25:
+    #         my_baby = self.get_pseudo_random_player()  # TODO: this might cause problems from not deep copying
+    #     else:
+    #         mom = self.get_pseudo_random_player()
+    #         dad = self.get_pseudo_random_player()
+    #         
+    #         if mom.fitness < dad.fitness:
+    #             my_baby_brain = dad.agent.crossover(mom.agent, innovation_history)
+    #         else:
+    #             my_baby_brain = mom.agent.crossover(dad.agent, innovation_history)
+    #         my_baby = Player(dad.pipes, agent=my_baby_brain)
+    #     my_baby.agent.mutate(innovation_history)
+    #     return my_baby
     
     def hatch_egg(self, innovation_history, clone_chance=0.25):
         if uniform(0, 1) < clone_chance:  # random.uniform
@@ -109,12 +110,14 @@ class Species:
             papa_bird = self.get_pseudo_random_player()
             
             if mama_bird.fitness < papa_bird.fitness:
+                #print(f"crossover {mama_bird.fitness} and {papa_bird.fitness}")
                 baby_bird_brain = papa_bird.agent.crossover(mama_bird.agent)
             else:
                 baby_bird_brain = mama_bird.agent.crossover(papa_bird.agent)
-            baby_bird = Player(papa_bird.pipes, agent=baby_bird_brain)
+                #print(f"crossover {mama_bird.fitness} and {papa_bird.fitness}")
+            baby_bird = Player(agent=baby_bird_brain)
             
-        baby_bird.agent.mutate(innovation_history)
+        baby_bird.agent.mutate(innovation_history, new_connection_chance=0.1, new_node_chance=0.03) # , new_connection_chance=0.4, new_node_chance=0.2)
         return baby_bird
     
     def cull(self):

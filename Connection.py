@@ -15,7 +15,7 @@ class Connection:
         if rand > perturb_chance:
             self.weight = random.uniform(-1, 1)
         else:
-            self.weight += random.uniform(-0.2, 0.2)
+            self.weight += random.gauss(0, 1) / 50
             # keep the weights bounded to not overpower another connection
             if self.weight > 1:
                 self.weight = 1

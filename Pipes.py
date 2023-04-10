@@ -11,13 +11,12 @@ class Pipes:
     def __init__(self, seed, velocity=-128 * globfile.DT):
         self.seed = random.Random(seed)
         self.velocity = velocity
-        pipeindex = random.randint(0, len(globfile.PIPES_LIST) - 1)
         self.sprites = (
             pygame.transform.flip(
                 pygame.image.load(
-                    globfile.PIPES_LIST[pipeindex]).convert_alpha(), False,
+                    globfile.PIPES_LIST[0]).convert_alpha(), False,
                 True),
-            pygame.image.load(globfile.PIPES_LIST[pipeindex]).convert_alpha(),
+            pygame.image.load(globfile.PIPES_LIST[0]).convert_alpha(),
         )
         self.width = self.sprites[0].get_width()
         self.height = self.sprites[0].get_height()
@@ -89,7 +88,6 @@ class Pipes:
 
     def draw(self, screen):
         for uPipe, lPipe in zip(self.upperPipes, self.lowerPipes):
-            pygame.draw.line(screen, (255, 255, 255), (uPipe['x'], uPipe['y']),
-                             (uPipe['x'], 0))
             screen.blit(self.sprites[0], (uPipe['x'], uPipe['y']))
             screen.blit(self.sprites[1], (lPipe['x'], lPipe['y']))
+
