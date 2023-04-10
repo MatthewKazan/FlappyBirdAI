@@ -100,7 +100,7 @@ def showGameOverScreen(player):
             if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
                 if player.y + player.height >= globfile.BASEY - 1:
                     return
-        player.dropDead()
+        player.drop_dead()
         # draw sprites
         SCREEN.blit(IMAGES['background'], (0,0))
 

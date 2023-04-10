@@ -4,6 +4,7 @@ import numpy
 import pygame
 import globfile
 from HumanAgent import HumanAgent
+# from copy import deepcopy
 
 
 class Player:
@@ -11,6 +12,7 @@ class Player:
 
     def __init__(self, pipes, x=int(globfile.SCREENWIDTH * 0.2), y=globfile.SCREENHEIGHT / 2, agent=HumanAgent()):
         self.score = 0  # number of pipes the flappy bird has crossed
+        
         self.x = x
         self.y = y
         self.playerVelY = -9  # player's velocity along Y, default same as playerFlapped
@@ -28,22 +30,27 @@ class Player:
             pygame.image.load(globfile.PLAYERS_LIST[0][1]).convert_alpha(),
             pygame.image.load(globfile.PLAYERS_LIST[0][2]).convert_alpha(),
         )
-        self.agent = agent
+        self.agent: 'Genome' = agent
         self.width = self.sprites[0].get_width()
         self.height = self.sprites[0].get_height()
         self.rect = pygame.Rect(self.x, self.y, self.sprites[0].get_width(),
                                 self.sprites[0].get_height())
         self.pipes = pipes
         self.isAlive = True
-        self.fitness = 0  # the fitness score used to breed and annihilate the poorly performing children
         self.lifespan = 0
+        
+        # NEAT INFO
+        self.fitness = 0  # the fitness score used to breed and annihilate the poorly performing children
+        self.sight = []  # the inputs to the neural net
+        self.generation = 0
+        self.best_score = 0
 
     def flap(self):
         """Flap the player"""
         self.playerVelY = self.playerFlapAcc
         self.playerFlapped = True
 
-    def checkCrash(self):
+    def check_crash(self):
         self.rect = pygame.Rect(self.x, self.y, self.sprites[0].get_width(),
                                 self.sprites[0].get_height())
 
@@ -54,7 +61,7 @@ class Player:
 
     def update(self):
         self.lifespan += 1
-        decision = self.agent.next_move(self.getState())[0]
+        decision = self.agent.next_move(self.sight)[0]
         if decision > .5:
             self.flap()
         # rotate the player
@@ -72,28 +79,27 @@ class Player:
 
         playerHeight = self.sprites[0].get_height()
         self.y += min(self.playerVelY, globfile.BASEY - self.y - playerHeight)
-        #print(self.agent)
+        # print(self.agent)
 
-    def getState(self):
-        dists = [0] * 4
+    def look_around(self):
+        self.sight = [0] * 4
         closest_pipe = 0
-        dists[0] = numpy.interp(self.playerVelY, [-10, 10], [-1, 1])
+        self.sight[0] = numpy.interp(self.playerVelY, [-10, 10], [-1, 1])
         if self.x < self.pipes.lowerPipes[1]['x'] and \
                 (self.pipes.lowerPipes[0]['x'] < self.x or
                  self.pipes.lowerPipes[0]['x'] > self.pipes.lowerPipes[1]['x']):
             closest_pipe = 1
-        dists[1] = numpy.interp(
+        self.sight[1] = numpy.interp(
             self.pipes.lowerPipes[closest_pipe]['x'] - self.x,
             [0, globfile.SCREENWIDTH], [0, 1])
-        dists[2] = numpy.interp(
+        self.sight[2] = numpy.interp(
             max(0, self.pipes.lowerPipes[closest_pipe]['y'] - self.y),
             [0, globfile.SCREENHEIGHT], [0, 1])
-        dists[3] = numpy.interp(max(0, self.y - (
+        self.sight[3] = numpy.interp(max(0, self.y - (
                 self.pipes.upperPipes[closest_pipe]['y'] + self.pipes.height)),
                                 [0, globfile.SCREENHEIGHT], [0, 1])
-        return dists
 
-    def dropDead(self):
+    def drop_dead(self):
         # player y shift
         if self.y + self.height < globfile.BASEY - 1:
             self.y += min(self.playerVelY,
@@ -105,10 +111,15 @@ class Player:
             
     def fitness_level(self):
         return 1 + self.score ** 2 + self.lifespan / 20
-        
             
     def __copy__(self):
-        pass
+        copy = Player(self.pipes)
+        copy.agent = self.agent.__copy__()
+        copy.fitness = self.fitness
+        copy.agent.generate_network()
+        copy.generation = self.generation
+        copy.best_score = self.best_score
+        return copy
 
     def draw(self, screen):
         if self.isAlive:

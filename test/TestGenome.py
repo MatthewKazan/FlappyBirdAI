@@ -89,6 +89,11 @@ class TestGenome(unittest.TestCase):
 		self.agent.mutate(self.innovationHistory, new_connection_chance=1, new_node_chance=0, mutate_weight_chance=0)
 		self.assertEqual(len(self.agent.connections), 3)
 		print(self.agent)
+		
+	def test_splice(self):
+		arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+		del arr[1:]
+		self.assertEqual(arr, [1])
 	
 	
 if __name__ == '__main__':

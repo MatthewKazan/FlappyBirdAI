@@ -78,6 +78,7 @@ class Genome:
     
     def generate_network(self):
         self.connect_nodes()
+        self.network = []
         self.network = deepcopy(self.nodes)
         self.network.sort(key=lambda n: n.layer)
 
@@ -263,25 +264,33 @@ class Genome:
         
         child.connect_nodes()
         return child
+
+    def matching_connection(self, other_parent: 'Genome', innovation_num: int):
+        for other_parent_connection in other_parent.connections:
+            if other_parent_connection.innovation_num == innovation_num:
+                return other_parent_connection
+    
+        return None
     
     def __copy__(self):
-        copy = Genome(self.num_inputs, self.num_outputs, True, layers=self.layers)
-        
-        for node in self.nodes:
-            copy.nodes.append(node.__copy__())
-
-        # for node in self.input_nodes:
-        #     copy.input_nodes.append(node.__copy__())
-
-        for node in self.output_nodes:
-            copy.output_nodes.append(node.__copy__())
-            
-        for connection in self.connections:
-            # copy.connections.append(connection.__copy__(copy.get_node(connection.in_node.id),
-            #                                             copy.get_node(connection.out_node.id)))
-            copy.connections.append(connection.__copy__())
-        copy.bias_node_id = self.bias_node_id
-        copy.connect_nodes()
+        # copy = Genome(self.num_inputs, self.num_outputs, True, layers=self.layers)
+        #
+        # for node in self.nodes:
+        #     copy.nodes.append(node.__copy__())
+        #
+        # # for node in self.input_nodes:
+        # #     copy.input_nodes.append(node.__copy__())
+        #
+        # for node in self.output_nodes:
+        #     copy.output_nodes.append(node.__copy__())
+        #
+        # for connection in self.connections:
+        #     # copy.connections.append(connection.__copy__(copy.get_node(connection.in_node.id),
+        #     #                                             copy.get_node(connection.out_node.id)))
+        #     copy.connections.append(connection.__copy__())
+        # copy.bias_node_id = self.bias_node_id
+        # copy.connect_nodes()
+        copy = deepcopy(self)
 
         return copy
         
@@ -291,12 +300,5 @@ class Genome:
                 return node
         
         Exception("No nodes found with node id:", node_id)
-        return None
-        
-    def matching_connection(self, other_parent: 'Genome', innovation_num: int):
-        for other_parent_connection in other_parent.connections:
-            if other_parent_connection.innovation_num == innovation_num:
-                return other_parent_connection
-            
         return None
         
