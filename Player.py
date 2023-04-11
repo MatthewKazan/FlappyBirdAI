@@ -77,6 +77,7 @@ class Player:
         self.lifespan += 1
         self.look_around()
         decision = self.agent.next_move(self.sight)[0]
+        print(decision)
         if decision > .51:
             self.flap()
         # rotate the player

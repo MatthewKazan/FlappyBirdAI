@@ -17,6 +17,7 @@ BACKGROUNDS_LIST = (
     'assets/sprites/background-night.png',
 )
 
+
 def main():
     global SCREEN, FPSCLOCK
     pygame.init()
@@ -45,7 +46,42 @@ def main():
     # base (ground) sprite
     IMAGES['base'] = pygame.image.load('assets/sprites/base.png').convert_alpha()
     # NEAT_game_loop()
-    RLGameLoop()
+    #RLGameLoop()
+    play_RL()
+
+def play_RL():
+    rl = RLAgent()
+    rl.load("dumb")
+    player = Player(agent=rl)
+    
+    while True:
+        rl = RLAgent()
+        rl.load("dumb")
+        player = Player(agent=rl)
+        # select random background sprites
+        randBg = random.randint(0, len(BACKGROUNDS_LIST) - 1)
+        IMAGES['background'] = pygame.image.load(BACKGROUNDS_LIST[randBg]).convert()
+        basex = -28
+        baseShift = IMAGES['base'].get_width() - IMAGES['background'].get_width()
+
+        FPSCLOCK.tick(globfile.FPS)
+        while player.isAlive:
+            # draw sprites
+            SCREEN.blit(IMAGES['background'], (0, 0))
+            player.draw(SCREEN)
+            SCREEN.blit(IMAGES['base'], (basex, globfile.BASEY))
+    
+            # print score so player overlaps the score
+            showScore(player.score)
+            pygame.display.update()
+            FPSCLOCK.tick(globfile.FPS)
+    
+            basex = -((-basex + 100) % baseShift)
+    
+            player.update()
+            player.check_crash()
+            
+
 
 def RLGameLoop():
     rl = RLAgent()
@@ -54,7 +90,7 @@ def RLGameLoop():
         rl.q_learning(1, player)
         if i % 10 == 0:
             rl.update_target_model()
-    rl.save("dumb")
+    rl.save("dumb2")
 
 def NEAT_game_loop():
     population = Population(50)
@@ -101,6 +137,7 @@ def mainGame(population):
         basex = -((-basex + 100) % baseShift)
 
         population.update()
+        
 
 def showScore(score):
     """displays score in center of screen"""

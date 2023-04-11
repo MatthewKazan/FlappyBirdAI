@@ -80,7 +80,8 @@ class RLAgent:
             player.future_action(action)
             next_state = player.sight
             next_state = np.reshape(next_state, [1, self.state_size])
-            done = player.check_crash()
+            player.check_crash()
+            done = player.isAlive
             reward = 1 if not done else -10
             # next_state = np.reshape(next_state, [1, self.state_size])
             self.remember(state, action, reward, next_state, done)
