@@ -1,16 +1,12 @@
-## Create RL agent to play the flappy bird game, action space is [0,1] and state space is
-import tensorflow as tf
 import numpy as np
-import random
-from collections import deque
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
+import random
 
 
 class RLAgent:
     def __init__(self):
-        #self.env = env
         self.state_size = 4
         self.action_size = 2
         self.memory = []
@@ -40,22 +36,23 @@ class RLAgent:
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
 
-    def act(self, state):
+    def next_move(self, state):
         if np.random.rand() <= self.epsilon:
             return random.randrange(self.action_size)
         act_values = self.model.predict(state)
-        return np.argmax(act_values[0])  # returns action
+        return np.argmax(act_values)  # returns action
 
     def replay(self, batch_size):
         minibatch = random.sample(self.memory, batch_size)
         for state, action, reward, next_state, done in minibatch:
             target = reward
-
             # using reward + gamma * max Q(s',a') to update the Q value
             # Q(s,a) = r + gamma * max Q(s',a')
+            print("next state: ", next_state)
+            print("state: ", state)
             if not done:
                 target = (reward + self.gamma *
-                          np.amax(self.target_model.predict(next_state)[0]))
+                          np.amax(self.target_model.predict(next_state)))
             target_f = self.model.predict(state)
             target_f[0][action] = target
             self.model.fit(state, target_f, epochs=1, verbose=0)
@@ -69,23 +66,20 @@ class RLAgent:
         self.model.save_weights(name)
 
     ## implement the q learning algorithm using the bellman equation
-    def q_learning(self, episodes, batch_size):
-        for e in range(episodes):
-            state = self.env.reset()
-            state = np.reshape(state, [1, self.state_size])
-            for time in range(500):
-                action = self.act(state)
-                next_state, reward, done, _ = self.env.step(action)
-                reward = reward if not done else -10
-                next_state = np.reshape(next_state, [1, self.state_size])
-                self.remember(state, action, reward, next_state, done)
-                state = next_state
-                if done:
-                    print("episode: {}/{}, score: {}, e: {:.2}"
-                          .format(e, episodes, time, self.epsilon))
-                    break
-            if len(self.memory) > batch_size:
-                self.replay(batch_size)
-            if e % 10 == 0:
-                self.update_target_model()
-        self.save("flappy_bird.h5")
+    def q_learning(self, batch_size, player):
+        player.look_around()  # np.reshape(player.look_around(), [1, self.state_size])
+        state = player.sight
+        for time in range(500):
+            action = self.next_move(state)
+            player.flap()
+            next_state = player.sight
+            done = player.check_crash()
+            reward = 1 if not done else -10
+            # next_state = np.reshape(next_state, [1, self.state_size])
+            self.remember(state, action, reward, next_state, done)
+            state = next_state
+            if done:
+                print(f"episode: {time}/{self.epsilon}, score: {player.score}, e: {self.epsilon}")
+                break
+        if len(self.memory) > batch_size:
+            self.replay(batch_size)

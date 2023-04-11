@@ -53,7 +53,6 @@ class Player:
         """Flap the player"""
         self.playerVelY = self.playerFlapAcc
         self.playerFlapped = True
-        #return self.look_around()
 
     def check_crash(self):
         self.rect = pygame.Rect(self.x + self.width / 2, self.y + self.height / 2, self.width,
@@ -63,7 +62,7 @@ class Player:
             self.isAlive = False
         elif not self.isAlive or self.pipes.collide(self)[0] or self.pipes.collide(self)[1]:
             self.isAlive = False
-        #return self.isAlive
+        return self.isAlive
 
     def update(self):
         self.lifespan += 1
