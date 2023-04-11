@@ -3,6 +3,7 @@ from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
 import random
+from copy import deepcopy
 
 
 class RLAgent:
@@ -38,9 +39,11 @@ class RLAgent:
 
     def next_move(self, state):
         if np.random.rand() <= self.epsilon:
-            return random.randrange(self.action_size)
+            return [random.randrange(self.action_size)]
+        state = np.reshape(state, [1, self.state_size])
         act_values = self.model.predict(state)
-        return np.argmax(act_values)  # returns action
+        print(np.argmax(act_values))
+        return [np.argmax(act_values)]  # returns action
 
     def replay(self, batch_size):
         minibatch = random.sample(self.memory, batch_size)
@@ -51,8 +54,11 @@ class RLAgent:
             print("next state: ", next_state)
             print("state: ", state)
             if not done:
+                # next_state = np.reshape(next_state, [1, self.state_size])
                 target = (reward + self.gamma *
-                          np.amax(self.target_model.predict(next_state)))
+                          np.amax(self.target_model.predict(next_state)[0]))
+            state = np.reshape(state, [1, self.state_size])
+            print(state.shape)
             target_f = self.model.predict(state)
             target_f[0][action] = target
             self.model.fit(state, target_f, epochs=1, verbose=0)
@@ -71,8 +77,9 @@ class RLAgent:
         state = player.sight
         for time in range(500):
             action = self.next_move(state)
-            player.flap()
+            player.future_action(action)
             next_state = player.sight
+            next_state = np.reshape(next_state, [1, self.state_size])
             done = player.check_crash()
             reward = 1 if not done else -10
             # next_state = np.reshape(next_state, [1, self.state_size])
@@ -83,3 +90,19 @@ class RLAgent:
                 break
         if len(self.memory) > batch_size:
             self.replay(batch_size)
+            
+    def clone_for_future(self):
+        copy = RLAgent()
+        copy.state_size = self.state_size
+        copy.action_size = self.action_size
+        copy.memory = deepcopy(self.memory)
+        copy.gamma = self.gamma
+        copy.epsilon = self.epsilon
+        copy.epsilon_min = self.epsilon_min
+        copy.epsilon_decay = self.epsilon_decay
+        copy.learning_rate = self.learning_rate
+        copy.model = None
+        copy.target_model = None
+        
+        return copy
+    

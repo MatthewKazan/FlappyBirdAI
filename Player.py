@@ -53,6 +53,15 @@ class Player:
         """Flap the player"""
         self.playerVelY = self.playerFlapAcc
         self.playerFlapped = True
+        
+    def future_action(self, flap):
+        future_bird = self.clone_for_future()
+        if flap:
+            self.y += min(self.playerVelY, globfile.BASEY - self.y - self.sprites[0].get_height())
+            future_bird.flap()
+        future_bird.update()
+        future_bird.look_around()
+        return future_bird.sight
 
     def check_crash(self):
         self.rect = pygame.Rect(self.x + self.width / 2, self.y + self.height / 2, self.width,
@@ -132,6 +141,31 @@ class Player:
         copy.agent.generate_network()
         copy.generation = self.generation
         copy.best_score = self.best_score
+        return copy
+    
+    def clone_for_future(self):
+        copy = Player()
+        copy.agent = self.agent.clone_for_future()
+        copy.fitness = self.fitness
+        copy.generation = self.generation
+        copy.best_score = self.best_score
+        copy.x = self.x
+        copy.y = self.y
+        copy.playerVelY = self.playerVelY
+        copy.playerRot = self.playerRot
+        copy.playerVelRot = self.playerVelRot
+        copy.playerRotThr = self.playerRotThr
+        copy.playerFlapAcc = self.playerFlapAcc
+        copy.playerFlapped = self.playerFlapped
+        copy.width = self.width
+        copy.height = self.height
+        copy.rect = self.rect
+        copy.seed = self.seed
+        copy.pipes = self.pipes
+        copy.isAlive = self.isAlive
+        copy.lifespan = self.lifespan
+        copy.score = self.score
+        copy.sight = self.sight
         return copy
 
     def draw(self, screen):
