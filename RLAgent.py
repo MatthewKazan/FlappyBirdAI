@@ -1,3 +1,4 @@
+import keras.models
 import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense
@@ -66,10 +67,10 @@ class RLAgent:
             self.epsilon *= self.epsilon_decay
 
     def load(self, name):
-        self.model.load_weights(name)
+        self.model = keras.models.load_model(name)
 
     def save(self, name):
-        self.model.save_weights(name)
+        self.model.save(name)
 
     ## implement the q learning algorithm using the bellman equation
     def q_learning(self, batch_size, player):

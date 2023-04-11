@@ -46,7 +46,7 @@ def main():
     # base (ground) sprite
     IMAGES['base'] = pygame.image.load('assets/sprites/base.png').convert_alpha()
     # NEAT_game_loop()
-    #RLGameLoop()
+    RLGameLoop()
     play_RL()
 
 def play_RL():
