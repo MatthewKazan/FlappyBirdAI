@@ -2,7 +2,9 @@ import random
 import pygame
 
 import globfile
+from Player import Player
 from Population import Population
+from RLAgent import RLAgent
 
 # Source code for game taken from: https://github.com/sourabhv/FlapPyBird
 
@@ -43,8 +45,17 @@ def main():
     # base (ground) sprite
     IMAGES['base'] = pygame.image.load('assets/sprites/base.png').convert_alpha()
     NEAT_game_loop()
-    #RL_game_loop()
-    
+    #RLGameLoop()
+# 
+# def RLGameLoop():
+#     rl = RLAgent()
+#     for i in range(100):
+#         player = Player(agent = RLAgent())
+#         rl.q_learning(1, player)
+#         if i % 10 == 0:
+#             rl.update_target_model()
+#     rl.save("dumb")
+
 def NEAT_game_loop():
     population = Population(50)
 
